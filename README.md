@@ -4,6 +4,8 @@
 
 Enables Claude, ChatGPT, Copilot, Gemini, and any MCP-compatible client to interact directly with ThinkNEO's governance capabilities: spend tracking, guardrail evaluation, policy enforcement, budget monitoring, compliance status, and provider health.
 
+[![thinkneo-control-plane MCP server](https://glama.ai/mcp/servers/thinkneo-ai/mcp-server/badges/card.svg)](https://glama.ai/mcp/servers/thinkneo-ai/mcp-server)
+
 - **Registry:** `ai.thinkneo/control-plane`
 - **Endpoint:** `https://mcp.thinkneo.ai/mcp`
 - **Transport:** `streamable-http`
