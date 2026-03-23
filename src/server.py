@@ -19,6 +19,7 @@ from starlette.applications import Starlette
 from starlette.middleware.cors import CORSMiddleware
 
 from .auth import BearerTokenMiddleware
+from .capabilities import register_prompts, register_resources
 from .config import get_settings
 from .tools import register_all
 
@@ -68,11 +69,13 @@ mcp = FastMCP(
     log_level=settings.log_level,
 )
 
-# Register all tools
+# Register all tools, prompts, and resources
 register_all(mcp)
+register_prompts(mcp)
+register_resources(mcp)
 
 logger.info(
-    "ThinkNEO MCP Server configured: %d tools, auth_required=%s",
+    "ThinkNEO MCP Server configured: %d tools, 2 prompts, 2 resources, auth_required=%s",
     8,
     settings.require_auth,
 )
