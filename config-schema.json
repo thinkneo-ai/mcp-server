@@ -1,0 +1,12 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "apiKey": {
+      "type": "string",
+      "title": "ThinkNEO API Key",
+      "description": "Required for authenticated tools (spend tracking, guardrails, policy, budget, alerts, and compliance). Public tools (provider_status, schedule_demo) work without a key. Get yours at https://thinkneo.ai/talk-sales",
+      "secret": true
+    }
+  }
+}

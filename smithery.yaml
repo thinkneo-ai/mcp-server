@@ -1,0 +1,33 @@
+name: thinkneo-ai/control-plane
+displayName: ThinkNEO Control Plane
+description: >
+  Enterprise AI Control Plane — governance layer between your AI applications
+  and providers (OpenAI, Anthropic, Google, Mistral, and more). Provides
+  spend tracking by department/team, runtime guardrails (monitor & enforce),
+  policy enforcement, hard budget limits, active alert monitoring, compliance
+  readiness (SOC2/GDPR/HIPAA), and real-time provider health status.
+homepage: https://thinkneo.ai
+icon: https://thinkneo.ai/favicon.ico
+license: proprietary
+tags:
+  - governance
+  - ai-ops
+  - finops
+  - guardrails
+  - compliance
+  - enterprise
+
+start: uvicorn src.server:app --host 0.0.0.0 --port 8081
+
+config:
+  $schema: "http://json-schema.org/draft-07/schema#"
+  type: object
+  properties:
+    apiKey:
+      type: string
+      title: ThinkNEO API Key
+      description: >
+        Required for authenticated tools (spend tracking, guardrails, policy,
+        budget, alerts, and compliance). Public tools work without a key.
+        Get yours at https://thinkneo.ai/talk-sales
+      secret: true
