@@ -1,5 +1,7 @@
 # ThinkNEO MCP Server
 
+[![MCP Marketplace](https://img.shields.io/badge/Get%20it%20on-MCP%20Marketplace-blue?style=flat-square)](https://mcp-marketplace.io)
+
 **Enterprise AI Control Plane** — Remote MCP server for ThinkNEO.
 
 Enables Claude, ChatGPT, Copilot, Gemini, and any MCP-compatible client to interact directly with ThinkNEO's governance capabilities: spend tracking, guardrail evaluation, policy enforcement, budget monitoring, compliance status, and provider health.
