@@ -1,0 +1,45 @@
+name: Publish MCP Server to Registry
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  publish:
+    name: Publish to MCP Registry
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate server.json schema
+        run: |
+          pip install jsonschema requests
+          python3 -c "
+          import json, requests, jsonschema
+          with open('server.json') as f:
+              doc = json.load(f)
+          schema_url = doc.get('\$schema', 'https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json')
+          schema = requests.get(schema_url).json()
+          jsonschema.validate(doc, schema)
+          print('server.json is valid')
+          "
+
+      - name: Install mcp-publisher
+        run: |
+          LATEST=$(curl -s https://api.github.com/repos/modelcontextprotocol/registry/releases/latest | jq -r .tag_name)
+          curl -L "https://github.com/modelcontextprotocol/registry/releases/download/${LATEST}/mcp-publisher_linux_amd64.tar.gz" \
+            | tar xz mcp-publisher
+          sudo mv mcp-publisher /usr/local/bin/
+
+      - name: Login via GitHub OIDC
+        run: mcp-publisher login github-oidc
+
+      - name: Publish to MCP Registry
+        run: mcp-publisher publish ./server.json
