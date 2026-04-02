@@ -1,12 +1,15 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-07-09/server.schema.json",
   "name": "ai.thinkneo/control-plane",
-  "description": "Enterprise AI governance: spend, guardrails, policy, budgets, compliance, and provider health.",
+  "title": "ThinkNEO Control Plane",
+  "description": "Enterprise AI governance: spend tracking, guardrails, policy enforcement, budgets, compliance, and provider health.",
+  "websiteUrl": "https://thinkneo.ai",
   "repository": {
     "url": "https://github.com/thinkneo-ai/mcp-server",
     "source": "github"
   },
-  "version": "1.0.0",
+  "version": "1.0.2",
+  "license": "MIT",
   "remotes": [
     {
       "type": "streamable-http",
