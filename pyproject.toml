@@ -1,0 +1,23 @@
+[project]
+name = "thinkneo-mcp-server"
+version = "1.0.2"
+description = "Enterprise AI Control Plane — MCP server for spend tracking, guardrails, policy enforcement, budget monitoring, compliance, and provider health."
+license = "MIT"
+requires-python = ">=3.11"
+authors = [
+    { name = "ThinkNEO", email = "hello@thinkneo.ai" },
+]
+readme = "README.md"
+keywords = ["mcp", "ai-governance", "finops", "guardrails", "compliance"]
+
+[project.urls]
+Homepage = "https://thinkneo.ai"
+Repository = "https://github.com/thinkneo-ai/mcp-server"
+Documentation = "https://github.com/thinkneo-ai/mcp-server#readme"
+
+[project.scripts]
+thinkneo-mcp = "src.server:main"
+
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"

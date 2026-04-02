@@ -8,7 +8,7 @@ description: >
   readiness (SOC2/GDPR/HIPAA), and real-time provider health status.
 homepage: https://thinkneo.ai
 icon: https://thinkneo.ai/favicon.ico
-license: proprietary
+license: MIT
 tags:
   - governance
   - ai-ops

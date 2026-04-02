@@ -1,8 +1,10 @@
 # ThinkNEO MCP Server
 
-[![MCP Marketplace](https://img.shields.io/badge/Get%20it%20on-MCP%20Marketplace-blue?style=flat-square)](https://mcp-marketplace.io)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![MCP](https://img.shields.io/badge/MCP-streamable--http-green.svg)](https://modelcontextprotocol.io)
+[![Website](https://img.shields.io/badge/Website-thinkneo.ai-purple.svg)](https://thinkneo.ai)
 
-**Enterprise AI Control Plane** — Remote MCP server for ThinkNEO.
+**Enterprise AI Control Plane** — Remote MCP server for [ThinkNEO](https://thinkneo.ai).
 
 Enables Claude, ChatGPT, Copilot, Gemini, and any MCP-compatible client to interact directly with ThinkNEO's governance capabilities: spend tracking, guardrail evaluation, policy enforcement, budget monitoring, compliance status, and provider health.
 
@@ -259,6 +261,12 @@ curl -s "https://registry.modelcontextprotocol.io/v0/servers?search=thinkneo" | 
 # Direct lookup
 curl -s "https://registry.modelcontextprotocol.io/v0/servers/ai.thinkneo%2Fcontrol-plane" | jq .
 ```
+
+---
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).
 
 ---
 
