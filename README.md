@@ -3,6 +3,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![MCP](https://img.shields.io/badge/MCP-streamable--http-green.svg)](https://modelcontextprotocol.io)
 [![Website](https://img.shields.io/badge/Website-thinkneo.ai-purple.svg)](https://thinkneo.ai)
+[![Glama](https://glama.ai/mcp/servers/thinkneo-ai/mcp-server/badge)](https://glama.ai/mcp/servers/thinkneo-ai/mcp-server)
 
 **Enterprise AI Control Plane** — Remote MCP server for [ThinkNEO](https://thinkneo.ai).
 

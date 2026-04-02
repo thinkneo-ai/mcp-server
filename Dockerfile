@@ -4,7 +4,8 @@ LABEL org.opencontainers.image.title="ThinkNEO MCP Server"
 LABEL org.opencontainers.image.description="Enterprise AI Control Plane — MCP remote server"
 LABEL org.opencontainers.image.url="https://thinkneo.ai"
 LABEL org.opencontainers.image.source="https://github.com/thinkneo-ai/mcp-server"
-LABEL org.opencontainers.image.version="1.0.0"
+LABEL org.opencontainers.image.version="1.0.2"
+LABEL org.opencontainers.image.licenses="MIT"
 
 # Create non-root user
 RUN groupadd --gid 1001 appgroup && \
@@ -16,8 +17,9 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy source
+# Copy source and metadata
 COPY --chown=appuser:appgroup src/ src/
+COPY --chown=appuser:appgroup server.json glama.json LICENSE README.md ./
 
 # Drop privileges
 USER appuser
