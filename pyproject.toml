@@ -26,6 +26,7 @@ Documentation = "https://github.com/thinkneo-ai/mcp-server#readme"
 
 [project.scripts]
 thinkneo-mcp = "src.server:main"
+thinkneo-mcp-stdio = "src.server:run_stdio"
 
 [build-system]
 requires = ["setuptools>=68.0"]

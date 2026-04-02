@@ -127,5 +127,10 @@ def main() -> None:
     )
 
 
+def run_stdio() -> None:
+    """Run the MCP server in stdio transport mode (used by mcp-proxy / Glama inspection)."""
+    mcp.run(transport="stdio")
+
+
 if __name__ == "__main__":
     main()
