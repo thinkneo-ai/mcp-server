@@ -48,6 +48,7 @@ mcp = FastMCP(
         "(OpenAI, Anthropic, Google, Mistral, and more). "
         "\n\n"
         "Available tools:\n"
+        "- thinkneo_read_memory: Read Claude Code project memory files (index or specific file) [public]\n"
         "- thinkneo_check_spend: AI cost breakdown by provider/model/team [auth required]\n"
         "- thinkneo_evaluate_guardrail: Pre-flight prompt safety evaluation [auth required]\n"
         "- thinkneo_check_policy: Verify model/provider/action is allowed [auth required]\n"

@@ -6,12 +6,14 @@ from .guardrails import register as register_guardrails
 from .policy import register as register_policy
 from .providers import register as register_providers
 from .scheduling import register as register_scheduling
+from .memory import register as register_memory
 from .spend import register as register_spend
 
 
 def register_all(mcp) -> None:
     """Register all ThinkNEO tools on the given FastMCP instance."""
     register_spend(mcp)
+    register_memory(mcp)
     register_guardrails(mcp)
     register_policy(mcp)
     register_budget(mcp)
