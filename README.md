@@ -3,7 +3,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![MCP](https://img.shields.io/badge/MCP-streamable--http-green.svg)](https://modelcontextprotocol.io)
 [![Website](https://img.shields.io/badge/Website-thinkneo.ai-purple.svg)](https://thinkneo.ai)
-[![Glama](https://glama.ai/mcp/servers/thinkneo-ai/mcp-server/badge)](https://glama.ai/mcp/servers/thinkneo-ai/mcp-server)
+[![Glama](https://glama.ai/mcp/servers/ThinkneoAI/mcp-server/badge)](https://glama.ai/mcp/servers/ThinkneoAI/mcp-server)
 
 **Enterprise AI Control Plane** — Remote MCP server for [ThinkNEO](https://thinkneo.ai).
 
@@ -20,6 +20,7 @@ Enables Claude, ChatGPT, Copilot, Gemini, and any MCP-compatible client to inter
 
 | Tool | Description | Auth |
 |------|-------------|------|
+| `thinkneo_read_memory` | Read Claude Code project memory files | **Public** |
 | `thinkneo_check_spend` | AI cost breakdown by provider/model/team | Required |
 | `thinkneo_evaluate_guardrail` | Pre-flight prompt safety evaluation | Required |
 | `thinkneo_check_policy` | Verify model/provider/action is allowed | Required |

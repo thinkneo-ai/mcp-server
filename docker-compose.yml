@@ -9,6 +9,8 @@ services:
     ports:
       - "127.0.0.1:8081:8081"
       - "100.74.53.95:8081:8081"
+    volumes:
+      - /home/openclaw/.claude/projects/-opt/memory:/app/memory:ro
     env_file:
       - .env
     environment:
@@ -16,7 +18,7 @@ services:
       PORT: "8081"
     healthcheck:
       test: ["CMD", "python3", "-c",
-        "import urllib.request; req = urllib.request.Request('http://127.0.0.1:8081/mcp', data=b'{\"jsonrpc\":\"2.0\",\"method\":\"initialize\",\"id\":1,\"params\":{\"protocolVersion\":\"2024-11-05\",\"capabilities\":{},\"clientInfo\":{\"name\":\"healthcheck\",\"version\":\"1.0\"}}}', headers={'Content-Type': 'application/json'}, method='POST'); urllib.request.urlopen(req, timeout=4)"]
+        "import urllib.request; req = urllib.request.Request('http://127.0.0.1:8081/mcp', data=b'{\"jsonrpc\":\"2.0\",\"method\":\"initialize\",\"id\":1,\"params\":{\"protocolVersion\":\"2024-11-05\",\"capabilities\":{},\"clientInfo\":{\"name\":\"healthcheck\",\"version\":\"1.0\"}}}', headers={'Content-Type': 'application/json', 'Accept': 'application/json, text/event-stream'}, method='POST'); urllib.request.urlopen(req, timeout=4)"]
       interval: 30s
       timeout: 10s
       retries: 3
