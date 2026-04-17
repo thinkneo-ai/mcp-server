@@ -13,7 +13,7 @@ from mcp.server.fastmcp import FastMCP
 from mcp.types import ToolAnnotations
 from pydantic import Field
 
-from ..auth import require_auth
+from ..plans import require_plan
 from ._common import evaluate_guardrails, utcnow, validate_workspace
 
 
@@ -32,7 +32,7 @@ def register(mcp: FastMCP) -> None:
         workspace: Annotated[str, Field(description="Workspace whose guardrail policies to apply for this evaluation")],
         guardrail_mode: Annotated[str, Field(description="Evaluation mode: 'monitor' (log violations only) or 'enforce' (block the request on violation)")] = "monitor",
     ) -> str:
-        require_auth()
+        require_plan("pro")
         workspace = validate_workspace(workspace)
 
         if guardrail_mode not in ("monitor", "enforce"):

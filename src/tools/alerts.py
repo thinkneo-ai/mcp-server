@@ -13,7 +13,7 @@ from mcp.server.fastmcp import FastMCP
 from mcp.types import ToolAnnotations
 from pydantic import Field
 
-from ..auth import require_auth
+from ..plans import require_plan
 from ._common import demo_note, utcnow, validate_workspace
 
 
@@ -32,7 +32,7 @@ def register(mcp: FastMCP) -> None:
         severity: Annotated[str, Field(description="Filter alerts by severity level: critical, warning, info, or all")] = "all",
         limit: Annotated[int, Field(description="Maximum number of alerts to return (1–100)", ge=1, le=100)] = 20,
     ) -> str:
-        require_auth()
+        require_plan("pro")
         workspace = validate_workspace(workspace)
 
         if severity not in ("critical", "warning", "info", "all"):

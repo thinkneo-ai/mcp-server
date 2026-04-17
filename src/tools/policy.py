@@ -13,7 +13,7 @@ from mcp.server.fastmcp import FastMCP
 from mcp.types import ToolAnnotations
 from pydantic import Field
 
-from ..auth import require_auth
+from ..plans import require_plan
 from ._common import demo_note, utcnow, validate_workspace
 
 # Demo blocklist — replace with real policy engine calls
@@ -37,7 +37,7 @@ def register(mcp: FastMCP) -> None:
         provider: Annotated[Optional[str], Field(description="AI provider to check (e.g., openai, anthropic, google, mistral)")] = None,
         action: Annotated[Optional[str], Field(description="Specific action to check (e.g., create-completion, use-tool, fine-tune)")] = None,
     ) -> str:
-        require_auth()
+        require_plan("pro")
         workspace = validate_workspace(workspace)
 
         checks: list[dict] = []

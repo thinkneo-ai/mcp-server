@@ -13,7 +13,7 @@ from mcp.server.fastmcp import FastMCP
 from mcp.types import ToolAnnotations
 from pydantic import Field
 
-from ..auth import require_auth
+from ..plans import require_plan
 from ._common import demo_note, utcnow, validate_workspace
 
 _FRAMEWORK_CONTROLS = {
@@ -54,7 +54,7 @@ def register(mcp: FastMCP) -> None:
         workspace: Annotated[str, Field(description="Workspace name or ID to evaluate compliance readiness for")],
         framework: Annotated[str, Field(description="Compliance framework to assess: soc2 (SOC 2 Type II), gdpr (GDPR), hipaa (HIPAA), or general (ThinkNEO AI governance)")] = "general",
     ) -> str:
-        require_auth()
+        require_plan("pro")
         workspace = validate_workspace(workspace)
 
         if framework not in _FRAMEWORK_CONTROLS:
