@@ -1,64 +1,40 @@
 """
-Configuration — ThinkNEO MCP Server
-Settings loaded from environment / .env file.
+Configuration — all sensitive values from environment variables.
 """
-
 from __future__ import annotations
 
 import os
+from dataclasses import dataclass, field
 from functools import lru_cache
-from typing import Optional
+from typing import List, Optional
 
 
+@dataclass(frozen=True)
 class Settings:
-    def __init__(self) -> None:
-        # Server
-        self.host: str = os.getenv("HOST", "0.0.0.0")
-        self.port: int = int(os.getenv("PORT", "8081"))
-        self.debug: bool = os.getenv("DEBUG", "false").lower() == "true"
-        self.log_level: str = os.getenv("LOG_LEVEL", "INFO").upper()
-
-        # Auth — comma-separated list of valid API keys
-        self.api_keys_raw: str = os.getenv("THINKNEO_MCP_API_KEYS", "")
-        # Master key (always valid if set)
-        self.master_key: str = os.getenv("THINKNEO_API_KEY", "")
-
-        # Optional: internal ThinkNEO governance API base URL
-        # If set, tools will call this API instead of using embedded logic.
-        self.thinkneo_api_base_url: Optional[str] = os.getenv("THINKNEO_API_BASE_URL")
-
-        # CORS origins (comma-separated)
-        self.allowed_origins_raw: str = os.getenv(
-            "ALLOWED_ORIGINS",
-            "https://claude.ai,https://chatgpt.com,https://copilot.microsoft.com",
-        )
-
-        # Scheduling — where to send demo requests
-        self.demo_webhook_url: Optional[str] = os.getenv("DEMO_WEBHOOK_URL")
-        self.demo_email: str = os.getenv("DEMO_EMAIL", "hello@thinkneo.ai")
-
-        # Public URL (shown in docs / error messages)
-        self.public_url: str = os.getenv("PUBLIC_URL", "https://mcp.thinkneo.ai")
-
-    @property
-    def valid_api_keys(self) -> set[str]:
-        keys: set[str] = set()
-        if self.api_keys_raw:
-            keys.update(k.strip() for k in self.api_keys_raw.split(",") if k.strip())
-        if self.master_key:
-            keys.add(self.master_key)
-        return keys
-
-    @property
-    def allowed_origins(self) -> list[str]:
-        return [o.strip() for o in self.allowed_origins_raw.split(",") if o.strip()]
-
-    @property
-    def require_auth(self) -> bool:
-        """True if at least one API key is configured."""
-        return bool(self.valid_api_keys)
+    host: str = "0.0.0.0"
+    port: int = 8081
+    log_level: str = "INFO"
+    require_auth: bool = True
+    valid_api_keys: List[str] = field(default_factory=list)
+    allowed_origins: List[str] = field(default_factory=list)
 
 
 @lru_cache(maxsize=1)
 def get_settings() -> Settings:
-    return Settings()
+    raw_keys = os.getenv("THINKNEO_MCP_API_KEYS", "")
+    master_key = os.getenv("THINKNEO_API_KEY", "")
+    keys = [k.strip() for k in raw_keys.split(",") if k.strip()]
+    if master_key and master_key not in keys:
+        keys.append(master_key)
+
+    raw_origins = os.getenv("ALLOWED_ORIGINS", "")
+    origins = [o.strip() for o in raw_origins.split(",") if o.strip()]
+
+    return Settings(
+        host=os.getenv("HOST", "0.0.0.0"),
+        port=int(os.getenv("PORT", "8081")),
+        log_level=os.getenv("LOG_LEVEL", "INFO").upper(),
+        require_auth=bool(keys),
+        valid_api_keys=keys,
+        allowed_origins=origins,
+    )

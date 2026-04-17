@@ -7,6 +7,7 @@ Public tool — no authentication required.
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 from typing import Annotated, Optional
 
@@ -17,6 +18,11 @@ from pydantic import Field
 from ._common import utcnow
 
 _MEMORY_DIR = Path("/app/memory")
+
+# Strict allowlist: lowercase alphanumerics + _ - . with .md extension.
+# Pattern: start with alphanumeric, then alphanumeric/underscore/hyphen/dot, end in .md
+# MEMORY.md (uppercase) is an accepted special case (the index file).
+_SAFE_FILENAME_RE = re.compile(r"^[a-z0-9][a-z0-9_\-.]*\.md$")
 
 
 def register(mcp: FastMCP) -> None:
@@ -57,18 +63,51 @@ def register(mcp: FastMCP) -> None:
         if not filename:
             filename = "MEMORY.md"
 
-        # Sanitize: only allow .md files, no path traversal
+        # Sanitize: strip any directory components first
         safe_name = Path(filename).name
-        if not safe_name.endswith(".md"):
+
+        # Length check to prevent pathological inputs
+        if len(safe_name) > 128:
             return json.dumps(
                 {
-                    "error": f"Only .md files are supported, got: '{safe_name}'",
+                    "error": "Filename too long (max 128 chars).",
                     "fetched_at": utcnow(),
                 },
                 indent=2,
             )
 
-        target = _MEMORY_DIR / safe_name
+        # Special case: allow MEMORY.md (index) — uppercase exception
+        if safe_name != "MEMORY.md" and not _SAFE_FILENAME_RE.match(safe_name):
+            return json.dumps(
+                {
+                    "error": "Invalid filename. Must match: "
+                             "lowercase letters, digits, underscores, hyphens, dots, "
+                             "ending in '.md' (e.g. 'user_fabio.md').",
+                    "got": safe_name[:64],
+                    "fetched_at": utcnow(),
+                },
+                indent=2,
+            )
+
+        # Extra guard: resolve paths and confirm target stays within _MEMORY_DIR.
+        # Prevents symlink/traversal escapes even if filename sanitization is bypassed.
+        try:
+            memory_root = _MEMORY_DIR.resolve(strict=True)
+            target = (_MEMORY_DIR / safe_name).resolve(strict=False)
+            if memory_root not in target.parents and target != memory_root:
+                return json.dumps(
+                    {
+                        "error": "Path traversal blocked.",
+                        "fetched_at": utcnow(),
+                    },
+                    indent=2,
+                )
+        except (OSError, ValueError):
+            return json.dumps(
+                {"error": "Could not resolve path.", "fetched_at": utcnow()},
+                indent=2,
+            )
+
         if not target.is_file():
             # List available files to help the caller
             available = sorted(

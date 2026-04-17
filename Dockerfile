@@ -19,6 +19,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy source and metadata
 COPY --chown=appuser:appgroup src/ src/
+COPY --chown=appuser:appgroup templates/ templates/
 COPY --chown=appuser:appgroup server.json glama.json LICENSE README.md ./
 
 # Drop privileges

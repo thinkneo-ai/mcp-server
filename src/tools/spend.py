@@ -13,7 +13,7 @@ from mcp.server.fastmcp import FastMCP
 from mcp.types import ToolAnnotations
 from pydantic import Field
 
-from ..auth import require_auth
+from ..plans import require_plan
 from ._common import demo_note, utcnow, validate_workspace
 
 
@@ -34,7 +34,7 @@ def register(mcp: FastMCP) -> None:
         start_date: Annotated[Optional[str], Field(description="Start date for a custom period in ISO format (YYYY-MM-DD). Only used when period='custom'")] = None,
         end_date: Annotated[Optional[str], Field(description="End date for a custom period in ISO format (YYYY-MM-DD). Only used when period='custom'")] = None,
     ) -> str:
-        require_auth()
+        require_plan("pro")
         workspace = validate_workspace(workspace)
 
         valid_periods = {"today", "this-week", "this-month", "last-month", "custom"}
