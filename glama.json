@@ -1,6 +1,31 @@
 {
   "$schema": "https://glama.ai/mcp/schemas/server.json",
+  "name": "thinkneo-control-plane",
+  "description": "Enterprise AI Control Plane — governance, guardrails, spend tracking, compliance monitoring, smart model routing, A2A bridge, observability, and MCP marketplace. 46 tools across 11 categories.",
   "maintainers": [
     "thinkneo-ai"
+  ],
+  "repository": "https://github.com/thinkneo-ai/mcp-server",
+  "homepage": "https://thinkneo.ai",
+  "categories": [
+    "governance",
+    "security",
+    "analytics",
+    "devops"
+  ],
+  "tags": [
+    "ai-governance",
+    "guardrails",
+    "finops",
+    "prompt-injection",
+    "pii-detection",
+    "compliance",
+    "soc2",
+    "gdpr",
+    "smart-router",
+    "a2a-protocol",
+    "observability",
+    "trust-score",
+    "mcp-marketplace"
   ]
 }
