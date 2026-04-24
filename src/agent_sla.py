@@ -135,6 +135,7 @@ def get_sla_status(api_key: str, agent_name: Optional[str] = None) -> Dict[str, 
                     where += " AND agent_name = %s"
                     params.append(agent_name)
 
+                # Dynamic WHERE with parameterized values — not SQL injection (conditions use %s)
                 cur.execute(f"SELECT * FROM agent_slas WHERE {where} ORDER BY agent_name, metric", params)
                 slas = cur.fetchall()
 
