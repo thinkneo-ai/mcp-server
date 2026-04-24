@@ -16,6 +16,20 @@
 
 ---
 
+## Audit this gateway yourself
+
+Run the live audit script from any machine with `curl` and `python3`:
+
+```bash
+curl -sSL https://raw.githubusercontent.com/thinkneo-ai/mcp-server/master/scripts/audit_live.sh | bash
+```
+
+Tests all surfaces (MCP tools, A2A agent card, security gates, injection/PII detection) in ~20 seconds. Exit code 0 = all OK.
+
+For authenticated tools: `./scripts/audit_live.sh --bearer YOUR_API_KEY`
+
+---
+
 ## Status
 
 | Component | Value |
