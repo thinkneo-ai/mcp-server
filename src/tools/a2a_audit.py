@@ -62,7 +62,7 @@ def register(mcp: FastMCP) -> None:
                         cost_usd, outcome, latency_ms, error_message, metadata,
                         initiated_at::text, completed_at::text
                     FROM a2a_interactions
-                    WHERE {where}
+                    WHERE {where}  -- parameterized conditions (%s placeholders)
                     ORDER BY initiated_at DESC
                     LIMIT {min(limit, 200)}
                 """)
@@ -79,7 +79,7 @@ def register(mcp: FastMCP) -> None:
                         ROUND(AVG(latency_ms)::numeric, 0) as avg_latency,
                         COUNT(DISTINCT from_agent || '->' || to_agent) as unique_pairs
                     FROM a2a_interactions
-                    WHERE {where}
+                    WHERE {where}  -- parameterized conditions (%s placeholders)
                 """)
                 stats = cur.fetchone()
 
