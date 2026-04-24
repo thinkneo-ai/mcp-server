@@ -28,6 +28,26 @@ Documentation = "https://github.com/thinkneo-ai/mcp-server#readme"
 thinkneo-mcp = "src.server:main"
 thinkneo-mcp-stdio = "src.server:run_stdio"
 
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-cov>=5.0",
+    "pytest-xdist>=3.5",
+    "pytest-timeout>=2.3",
+    "hypothesis>=6.100",
+    "bandit>=1.7",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+timeout = 30
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "adversarial: adversarial injection/PII tests",
+    "security: security tests (SQLi, SSRF, path traversal, auth bypass)",
+    "performance: latency benchmarks",
+]
+
 [build-system]
 requires = ["setuptools>=68.0"]
 build-backend = "setuptools.build_meta"
