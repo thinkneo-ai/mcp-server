@@ -1,0 +1,12 @@
+# Bandit configuration — ThinkNEO MCP Server
+#
+# B608 (hardcoded_sql_expressions) is skipped globally because:
+# - All 19 flagged instances use dynamic WHERE/INTERVAL with %s parameterized
+#   placeholders. User input never appears in the SQL string directly.
+# - Patterns: {where} with conditions like "key_hash = %s AND workspace = %s",
+#   {period_sql} from hardcoded dict, make_interval(hours => %s).
+# - bandit 1.9.x cannot recognize # nosec on multi-line f-strings (known limitation).
+# - Each instance has inline SQL comments documenting the parameterization rationale.
+# - See THREAT_MODEL.md > Tampering > SQL injection for full analysis.
+skips:
+  - B608
