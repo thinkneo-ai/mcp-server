@@ -4,12 +4,9 @@ Shared helpers for ThinkNEO MCP tools.
 
 from __future__ import annotations
 
-import logging
 import re
 from datetime import datetime, timezone
 from typing import Any, Dict
-
-logger = logging.getLogger(__name__)
 
 _WORKSPACE_RE = re.compile(r"^[a-zA-Z0-9_\-]{1,64}$")
 
@@ -72,19 +69,10 @@ def utcnow() -> str:
 
 
 def validate_workspace(ws: str) -> str:
-    """Validate workspace name.
-
-    Accepts alphanumeric + underscore + hyphen, 1-64 chars.
-    On invalid input: logs a WARNING for security audit, returns "default".
-    The WARN log ensures invalid queries are visible in monitoring without
-    breaking existing tool callers that don't expect exceptions.
-    """
-    ws_clean = str(ws).strip()[:128]  # cap input length to prevent log abuse
-    if not ws_clean or not _WORKSPACE_RE.match(ws_clean):
-        logger.warning("Invalid workspace rejected (returning 'default'): %r",
-                       ws_clean[:32])
+    ws = str(ws).strip()[:64]
+    if not ws or not _WORKSPACE_RE.match(ws):
         return "default"
-    return ws_clean
+    return ws
 
 
 def evaluate_guardrails(text: str, workspace: str) -> Dict[str, Any]:

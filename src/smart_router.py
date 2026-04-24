@@ -556,7 +556,7 @@ def get_savings_report(key_hash: str, days: int = 30) -> Dict[str, Any]:
                         COALESCE(AVG(quality_score), 0) as avg_quality
                     FROM router_requests
                     WHERE key_hash = %s
-                      AND routed_at >= NOW() - make_interval(days => %s)
+                      AND routed_at >= NOW() - INTERVAL '%s days'
                     """,
                     (key_hash, days),
                 )
@@ -571,7 +571,7 @@ def get_savings_report(key_hash: str, days: int = 30) -> Dict[str, Any]:
                         COALESCE(SUM(cost_original - cost_actual), 0) as savings
                     FROM router_requests
                     WHERE key_hash = %s
-                      AND routed_at >= NOW() - make_interval(days => %s)
+                      AND routed_at >= NOW() - INTERVAL '%s days'
                     GROUP BY task_type
                     ORDER BY savings DESC
                     """,
@@ -589,7 +589,7 @@ def get_savings_report(key_hash: str, days: int = 30) -> Dict[str, Any]:
                         COALESCE(SUM(cost_actual), 0) as total_cost
                     FROM router_requests
                     WHERE key_hash = %s
-                      AND routed_at >= NOW() - make_interval(days => %s)
+                      AND routed_at >= NOW() - INTERVAL '%s days'
                     GROUP BY model_used, provider
                     ORDER BY requests DESC
                     LIMIT 10

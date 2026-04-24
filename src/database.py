@@ -1,7 +1,7 @@
 """
 Database — PostgreSQL connection pool for the ThinkNEO MCP Server free-tier system.
 
-Uses psycopg (v3) with connection pool.
+Uses psycopg (v3) with async connection pool.
 Falls back gracefully if the database is unavailable (tools still work, just no usage tracking).
 """
 
@@ -10,13 +10,12 @@ from __future__ import annotations
 import hashlib
 import logging
 import os
-from contextlib import contextmanager
+from contextlib import asynccontextmanager
 from datetime import datetime, timezone
-from typing import Any, Generator, Optional
+from typing import Any, AsyncGenerator, Optional
 
 import psycopg
 from psycopg.rows import dict_row
-from psycopg_pool import ConnectionPool
 
 logger = logging.getLogger(__name__)
 
@@ -25,50 +24,17 @@ _DB_HOST = os.getenv("MCP_DB_HOST", "172.17.0.1")
 _DB_PORT = int(os.getenv("MCP_DB_PORT", "5432"))
 _DB_NAME = os.getenv("MCP_DB_NAME", "thinkneo_mcp")
 _DB_USER = os.getenv("MCP_DB_USER", "mcp_user")
-_DB_PASSWORD = os.getenv("MCP_DB_PASSWORD", "")
-
-if not _DB_PASSWORD:
-    logger.warning("MCP_DB_PASSWORD not set — database features will be unavailable")
+_DB_PASSWORD = os.getenv("MCP_DB_PASSWORD", "mcp_thinkneo_2026")
 
 _conninfo = f"host={_DB_HOST} port={_DB_PORT} dbname={_DB_NAME} user={_DB_USER} password={_DB_PASSWORD}"
 
-# Module-level connection pool — reuses connections across requests.
-_pool: Optional[ConnectionPool] = None
+# Module-level connection — we use a simple connection per query (sync)
+# since MCP tool calls are already serialized per request.
 
 
-def _get_pool() -> Optional[ConnectionPool]:
-    """Lazily initialize the connection pool on first use."""
-    global _pool
-    if _pool is not None:
-        return _pool
-    if not _DB_PASSWORD:
-        return None
-    try:
-        _pool = ConnectionPool(
-            conninfo=_conninfo,
-            min_size=1,
-            max_size=10,
-            kwargs={"row_factory": dict_row, "autocommit": True},
-            open=True,
-        )
-        logger.info("PostgreSQL connection pool initialized (max_size=10)")
-        return _pool
-    except Exception as exc:
-        logger.warning("Failed to create connection pool: %s", exc)
-        return None
-
-
-@contextmanager
-def _get_conn() -> Generator[psycopg.Connection, None, None]:
-    """Get a connection from the pool. Falls back to direct connection if pool unavailable."""
-    pool = _get_pool()
-    if pool:
-        with pool.connection() as conn:
-            yield conn
-    else:
-        # Fallback: direct connection (e.g. pool init failed)
-        with psycopg.connect(_conninfo, row_factory=dict_row, autocommit=True) as conn:
-            yield conn
+def _get_conn() -> psycopg.Connection:
+    """Get a new sync connection to PostgreSQL."""
+    return psycopg.connect(_conninfo, row_factory=dict_row, autocommit=True)
 
 
 def hash_key(api_key: str) -> str:
