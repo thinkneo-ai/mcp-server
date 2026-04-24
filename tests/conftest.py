@@ -38,28 +38,65 @@ def mock_cursor():
 @pytest.fixture
 def mock_db(mock_cursor):
     """
-    Patch src.database._get_conn so all DB calls use a mock.
+    Patch _get_conn everywhere it's imported so all DB calls use a mock.
 
     _get_conn() returns a psycopg.Connection used as:
         with _get_conn() as conn:
             with conn.cursor() as cur:
                 cur.execute(...)
 
-    We mock the full chain.
+    We mock the full chain and patch at every import site.
     """
     mock_conn = MagicMock()
-    # conn.__enter__ returns conn itself
     mock_conn.__enter__ = MagicMock(return_value=mock_conn)
     mock_conn.__exit__ = MagicMock(return_value=False)
 
-    # conn.cursor() returns a context manager yielding mock_cursor
     cursor_ctx = MagicMock()
     cursor_ctx.__enter__ = MagicMock(return_value=mock_cursor)
     cursor_ctx.__exit__ = MagicMock(return_value=False)
     mock_conn.cursor.return_value = cursor_ctx
 
-    with patch("src.database._get_conn", return_value=mock_conn):
-        yield mock_cursor
+    # Patch at source AND every module that imports _get_conn directly
+    patch_targets = [
+        "src.database._get_conn",
+        "src.observability._get_conn",
+        "src.security._get_conn",
+        "src.compliance_export._get_conn",
+        "src.a2a_bridge._get_conn",
+        "src.outcome_validation._get_conn",
+        "src.marketplace._get_conn",
+        "src.outcome_benchmarking._get_conn",
+        "src.policy_engine._get_conn",
+        "src.agent_sla._get_conn",
+        "src.tools.value_waste_detector._get_conn",
+        "src.tools.a2a_audit._get_conn",
+        "src.tools.value_business_impact._get_conn",
+        "src.tools.value_decision_cost._get_conn",
+        "src.tools.value_baseline._get_conn",
+        "src.tools.rotate_key._get_conn",
+        "src.tools.a2a_flow._get_conn",
+        "src.tools.value_agent_roi._get_conn",
+        "src.tools.a2a_policy._get_conn",
+        "src.tools.cache._get_conn",
+        "src.tools.value_log_decision._get_conn",
+        "src.tools.value_log_risk._get_conn",
+        "src.tools.a2a_log._get_conn",
+        "src.tools.trust_score._get_conn",
+    ]
+
+    patches = []
+    for target in patch_targets:
+        try:
+            p = patch(target, return_value=mock_conn)
+            p.start()
+            patches.append(p)
+        except (AttributeError, ModuleNotFoundError):
+            pass  # Module may not have _get_conn
+
+    yield mock_cursor
+
+    for p in patches:
+        p.stop()
 
 
 # ---------------------------------------------------------------------------
