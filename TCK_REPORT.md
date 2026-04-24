@@ -35,17 +35,21 @@ TCK compliance is the industry-standard way to verify interoperability between A
 
 ### 1. `optional_capability_batch_tasks`
 
-- **What it tests**: Batch processing of multiple tasks in a single JSON-RPC request
-- **Why it fails**: Batch task submission is marked as `optional` in A2A v0.3.0 spec. Our implementation processes tasks individually to maintain per-task audit trails and governance checks. Batching would bypass per-task policy evaluation.
-- **Impact**: None for single-task workflows (the standard pattern). Agents sending batch requests receive a clear error message suggesting individual submission.
-- **Roadmap**: Will implement in v0.4.0 with per-task-in-batch policy hooks.
+- **What it tests**: JSON-RPC batch arrays (multiple tasks in one HTTP request)
+- **Spec status**: **Optional** — A2A v0.3.0 Section 4.2 "Batch Processing" is marked `OPTIONAL`
+- **Our behavior**: Returns `-32600 Invalid Request` for array payloads. Agent card declares `capabilities.streaming: false` — batch is not advertised.
+- **Why not implemented**: Each task passes through the governance pipeline (ACL check → policy evaluation → accountability chain). Batch processing would need per-item governance hooks, adding complexity without demand from current consumers.
+- **Can we fix it?**: Yes — add array detection at line 266 of `server.py`, loop over items, process each through existing pipeline, return array of results. Estimated effort: 2-3 hours.
+- **Decision**: Not implemented by design. Governance integrity > batch throughput. Will implement when a consumer requires it.
 
 ### 2. `optional_capability_task_priority`
 
-- **What it tests**: Priority field on task submission (`priority: high/normal/low`)
-- **Why it fails**: Priority routing is not implemented. All tasks are processed in FIFO order through the governance pipeline.
-- **Impact**: None -- the priority field is accepted and stored but does not affect execution order.
-- **Roadmap**: Planned for Enterprise tier with SLA-based priority queues.
+- **What it tests**: That the `priority` field on task submission affects execution order
+- **Spec status**: **Optional** — A2A v0.3.0 Section 3.4 "Task Priority" is marked `OPTIONAL`
+- **Our behavior**: The `priority` field is **accepted and stored** in the task object (no rejection). However, execution order is FIFO — priority does not affect routing.
+- **Why not implemented**: All tasks go through the same governance pipeline. Priority-based routing requires a queue system (Redis sorted sets or similar) that adds operational complexity for a feature no consumer has requested.
+- **Can we fix it?**: Yes — add priority sorting to task dispatch. Estimated effort: 4-6 hours.
+- **Decision**: Not implemented by design. The field is accepted gracefully (no error), just not acted upon. Will implement for Enterprise tier with SLA-based queues.
 
 ---
 
