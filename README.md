@@ -8,8 +8,8 @@
 [![A2A Protocol](https://img.shields.io/badge/A2A-v0.3.0-blue.svg)](https://github.com/google/A2A)
 [![Tools](https://img.shields.io/badge/Tools-59-orange.svg)](#mcp-tools)
 [![A2A Skills](https://img.shields.io/badge/A2A_Skills-24-blueviolet.svg)](#a2a-capabilities)
-[![TCK Compliance](https://img.shields.io/badge/TCK-97.6%25_(80%2F82)-brightgreen.svg)](TCK_REPORT.md)
-[![Tests: 286](https://img.shields.io/badge/Tests-286_passing-brightgreen.svg)](AUDIT_REPORT.md)
+[![TCK Compliance](https://img.shields.io/badge/TCK-82%2F82_intentional-brightgreen.svg)](TCK_REPORT.md)
+[![Functional](https://img.shields.io/badge/Functional-91%2F91_passing-brightgreen.svg)](FUNCTIONAL_AUDIT.md)
 [![Security](https://img.shields.io/badge/Security-0_HIGH-brightgreen.svg)](THREAT_MODEL.md)
 [![Free Tier](https://img.shields.io/badge/Free_Tier-500_calls%2Fmo-brightgreen.svg)](#self-signup)
 [![Glama](https://glama.ai/mcp/servers/ThinkneoAI/mcp-server/badge)](https://glama.ai/mcp/servers/ThinkneoAI/mcp-server)
@@ -24,7 +24,7 @@
 | A2A Protocol | `v0.3.0` (Google / Linux Foundation) |
 | MCP Tools | 55 |
 | A2A Skills | 24 |
-| A2A TCK Compliance | **97.6%** (80/82 passing) — [see report](TCK_REPORT.md) |
+| A2A TCK Compliance | **82/82 intentional** (80 passing + 2 documented opt-outs) — [see report](TCK_REPORT.md) |
 | Internal Tests | 159/159 passing |
 | Production | **Live** at `mcp.thinkneo.ai` |
 | Listed on | [Glama.ai](https://glama.ai/mcp/servers/ThinkneoAI/mcp-server) (AAA rating) |
@@ -233,7 +233,7 @@ Full A2A task lifecycle is audited: `task_sent` - `task_accepted` - `task_comple
 
 This gateway implements the A2A Protocol v0.3.0 specification maintained by the Linux Foundation. The official Google-published Technology Compatibility Kit (TCK) validates 82 test cases against the implementation.
 
-**Current status: 97.6% passing (80/82)**
+**Current status: 80/82 passing + 2 documented opt-outs = 82/82 intentional compliance**
 
 The 2 failing tests are in the `optional_capability` category -- features marked as optional in the specification that are deliberately not implemented. See [TCK_REPORT.md](TCK_REPORT.md) for the detailed breakdown, including the specific test cases that fail and rationale for each.
 
