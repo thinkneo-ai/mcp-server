@@ -37,8 +37,10 @@ def register(mcp: FastMCP) -> None:
         validate_workspace(workspace)
 
         agent_filter = ""
+        agent_filter_params = []
         if agent_name:
-            agent_filter = f"AND (from_agent = '{agent_name}' OR to_agent = '{agent_name}')"
+            agent_filter = "AND (from_agent = %s OR to_agent = %s)"
+            agent_filter_params = [agent_name, agent_name]
 
         try:
             conn = _get_conn()
@@ -54,7 +56,7 @@ def register(mcp: FastMCP) -> None:
                         ROUND(AVG(avg_latency_ms)::numeric, 0) as latency
                     FROM a2a_flow_hourly
                     WHERE key_hash = %s AND workspace = %s
-                      AND hour >= now() - interval '{hours} hours'
+                      AND hour >= now() - make_interval(hours => %s)
                       {agent_filter}
                     GROUP BY from_agent, to_agent
                     ORDER BY calls DESC
@@ -69,12 +71,12 @@ def register(mcp: FastMCP) -> None:
                     FROM (
                         SELECT from_agent as agent, SUM(call_count) as out_calls, 0 as in_calls, SUM(total_cost_usd) as cost
                         FROM a2a_flow_hourly
-                        WHERE key_hash = %s AND workspace = %s AND hour >= now() - interval '{hours} hours'
+                        WHERE key_hash = %s AND workspace = %s AND hour >= now() - make_interval(hours => %s)
                         GROUP BY from_agent
                         UNION ALL
                         SELECT to_agent as agent, 0 as out_calls, SUM(call_count) as in_calls, 0 as cost
                         FROM a2a_flow_hourly
-                        WHERE key_hash = %s AND workspace = %s AND hour >= now() - interval '{hours} hours'
+                        WHERE key_hash = %s AND workspace = %s AND hour >= now() - make_interval(hours => %s)
                         GROUP BY to_agent
                     ) combined
                     GROUP BY agent
@@ -90,9 +92,9 @@ def register(mcp: FastMCP) -> None:
                     FROM a2a_flow_hourly a
                     JOIN a2a_flow_hourly b ON a.key_hash = b.key_hash AND a.workspace = b.workspace
                         AND a.from_agent = b.to_agent AND a.to_agent = b.from_agent
-                        AND b.hour >= now() - interval '{hours} hours'
+                        AND b.hour >= now() - make_interval(hours => %s)
                     WHERE a.key_hash = %s AND a.workspace = %s
-                      AND a.hour >= now() - interval '{hours} hours'
+                      AND a.hour >= now() - make_interval(hours => %s)
                     GROUP BY a.from_agent, a.to_agent
                     HAVING SUM(b.call_count) > 0
                 """, (key_h, workspace))
@@ -113,7 +115,7 @@ def register(mcp: FastMCP) -> None:
                     FROM a2a_interactions
                     WHERE key_hash = %s AND workspace = %s
                       AND outcome IN ('error', 'timeout')
-                      AND initiated_at >= now() - interval '{hours} hours'
+                      AND initiated_at >= now() - make_interval(hours => %s)
                     ORDER BY initiated_at DESC
                     LIMIT 10
                 """, (key_h, workspace))
