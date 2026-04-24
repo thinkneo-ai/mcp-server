@@ -141,8 +141,34 @@ def _wrap_tools_with_free_tier(mcp) -> None:
                 if block_msg:
                     return block_msg
 
-                # 2. Call original function
-                result = orig_fn(*args, **kwargs)
+                # 2. Call original function (with OTEL span if enabled)
+                from ..otel import is_otel_enabled, get_tracer, tool_calls_total, tool_duration_seconds
+                import time as _time
+
+                if is_otel_enabled() and get_tracer():
+                    tracer = get_tracer()
+                    with tracer.start_as_current_span(f"tool.{tname}") as span:
+                        span.set_attribute("thinkneo.tool_name", tname)
+                        span.set_attribute("thinkneo.tool_type", "mcp")
+                        start = _time.perf_counter()
+                        try:
+                            result = orig_fn(*args, **kwargs)
+                            span.set_attribute("thinkneo.tool_status", "ok")
+                            if tool_calls_total:
+                                tool_calls_total.add(1, {"tool": tname, "status": "ok"})
+                            return result
+                        except Exception as exc:
+                            span.set_attribute("thinkneo.tool_status", "error")
+                            span.record_exception(exc)
+                            if tool_calls_total:
+                                tool_calls_total.add(1, {"tool": tname, "status": "error"})
+                            raise
+                        finally:
+                            duration = _time.perf_counter() - start
+                            if tool_duration_seconds:
+                                tool_duration_seconds.record(duration, {"tool": tname})
+                else:
+                    result = orig_fn(*args, **kwargs)
 
                 # 3. Append usage footer to JSON responses
                 try:

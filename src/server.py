@@ -26,6 +26,8 @@ from .capabilities import register_prompts, register_resources
 from .config import get_settings
 from .agent_card import AgentCardMiddleware
 from .badge import BadgeMiddleware
+from .otel import setup_otel
+from .middleware.otel_middleware import OTELMiddleware
 from .landing import LANDING_HTML
 from .registry_landing import REGISTRY_HTML
 from .tools import register_all
@@ -35,6 +37,9 @@ from .tools import register_all
 # ---------------------------------------------------------------------------
 
 settings = get_settings()
+
+# Initialize OpenTelemetry (opt-in via OTEL_ENABLED=true)
+setup_otel()
 
 logging.basicConfig(
     level=getattr(logging, settings.log_level, logging.INFO),
@@ -156,10 +161,11 @@ _mcp_with_auth = BearerTokenMiddleware(_mcp_starlette)
 _mcp_with_landing = LandingPageMiddleware(_mcp_with_auth)
 _mcp_with_badge = BadgeMiddleware(_mcp_with_landing)
 _mcp_with_agent_card = AgentCardMiddleware(_mcp_with_badge)
+_mcp_with_otel = OTELMiddleware(_mcp_with_agent_card)
 
 # CORS — instantiate CORSMiddleware as a raw ASGI wrapper (preserves lifespan)
 app = CORSMiddleware(
-    app=_mcp_with_agent_card,
+    app=_mcp_with_otel,
     allow_origins=settings.allowed_origins or ["*"],
     allow_methods=["GET", "POST", "OPTIONS", "DELETE"],
     allow_headers=["*"],
