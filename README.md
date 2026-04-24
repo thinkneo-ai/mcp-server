@@ -314,6 +314,30 @@ curl -X POST https://agent.thinkneo.ai/a2a \
 
 ---
 
+## Observability Integrations
+
+Native OpenTelemetry support — traces and metrics for every MCP tool call and A2A skill invocation.
+
+Enable with environment variables (disabled by default, zero overhead when off):
+
+```bash
+OTEL_ENABLED=true
+OTEL_SERVICE_NAME=thinkneo-mcp-gateway
+OTEL_EXPORTER_OTLP_ENDPOINT=http://your-collector:4317
+```
+
+**Metrics exported:**
+- `thinkneo.tool_calls_total` — Counter per tool + status (ok/error)
+- `thinkneo.tool_duration_seconds` — Histogram per tool
+- `thinkneo.active_requests` — Gauge of concurrent requests
+
+**Vendor guides:**
+- [Datadog](docs/integrations/datadog.md)
+- [Grafana Tempo + Prometheus](docs/integrations/grafana-tempo.md)
+- [Honeycomb](docs/integrations/honeycomb.md)
+
+---
+
 ## Authentication
 
 - **API Key**: Prefix `tnk_`, provided via `Authorization: Bearer <key>` header
