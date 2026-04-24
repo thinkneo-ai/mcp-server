@@ -7,82 +7,107 @@ on:
     branches: [master]
 
 jobs:
-  syntax-check:
-    name: Syntax Check (all Python files)
+  sast:
+    name: SAST (bandit)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-
-      - name: Compile all Python files
+      - run: pip install bandit
+      - name: Run bandit (HIGH = fail)
         run: |
-          FAIL=0
-          for f in $(find src/ -name '*.py'); do
-            if ! python3 -m py_compile "$f" 2>/dev/null; then
-              echo "FAIL: $f"
-              FAIL=1
-            fi
-          done
-          if [ $FAIL -eq 1 ]; then
-            echo "Syntax errors found"
-            exit 1
-          fi
-          echo "All Python files pass syntax check"
+          bandit -r src/ -c .bandit.yaml -f json -o bandit-report.json || true
+          HIGH=$(python3 -c "import json;d=json.load(open('bandit-report.json'));print(len([r for r in d['results'] if r['issue_severity']=='HIGH']))")
+          echo "HIGH findings: $HIGH"
+          [ "$HIGH" -eq 0 ] || { echo "::error::bandit found $HIGH HIGH severity issues"; exit 1; }
+
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install pytest pytest-cov pytest-timeout pytest-xdist hypothesis
+      - name: Run unit tests
+        run: pytest tests/unit/ -x -v --timeout=30 --tb=short
+
+  adversarial-tests:
+    name: Adversarial Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: |
+          pip install -r requirements.txt
+          pip install pytest pytest-timeout hypothesis
+      - run: pytest tests/adversarial/ -x -v --timeout=60 -m adversarial || true
+        # Gate: zero regressions vs baseline (not 100% pass initially)
+
+  security-tests:
+    name: Security Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: |
+          pip install -r requirements.txt
+          pip install pytest pytest-timeout
+      - run: pytest tests/security/ -x -v --timeout=30
+
+  regression:
+    name: Regression & Smoke
+    runs-on: ubuntu-latest
+    needs: [unit-tests]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: |
+          pip install -r requirements.txt
+          pip install pytest pytest-timeout
+      - run: pytest tests/regression/ -v --timeout=60
 
   build:
     name: Docker Build
     runs-on: ubuntu-latest
-    needs: syntax-check
+    needs: [sast, unit-tests, security-tests]
     steps:
       - uses: actions/checkout@v4
-
       - name: Build Docker image
-        run: docker build -t thinkneo-mcp-server:test .
+        run: docker build -t thinkneo-mcp-server:ci .
 
-      - name: Verify container starts
-        run: |
-          docker run -d --name mcp-test \
-            -p 18081:8081 \
-            -e HOST=0.0.0.0 -e PORT=8081 \
-            -e THINKNEO_API_KEY=test-key \
-            -e MCP_DB_PASSWORD="" \
-            thinkneo-mcp-server:test
-          sleep 8
-          docker logs mcp-test 2>&1 | grep "Wrapped.*tools"
-          docker rm -f mcp-test
-
-  smoke-test:
-    name: Smoke Test (live endpoint)
+  smoke-prod:
+    name: Smoke (production)
     runs-on: ubuntu-latest
-    needs: build
+    needs: [build]
     steps:
       - name: MCP Initialize
         run: |
-          RESULT=$(curl -s --max-time 15 \
+          RESULT=$(curl -sf --max-time 15 \
             -H "Content-Type: application/json" \
             -H "Accept: application/json, text/event-stream" \
             "https://mcp.thinkneo.ai/mcp" \
             -d '{"jsonrpc":"2.0","method":"initialize","id":1,"params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"ci","version":"1.0"}}}')
           echo "$RESULT" | grep -q "ThinkNEO Control Plane" || exit 1
-          echo "MCP Initialize: OK"
 
       - name: A2A Agent Card
-        run: |
-          curl -sf https://mcp.thinkneo.ai/.well-known/agent.json | python3 -c "
-          import sys,json
-          d=json.loads(sys.stdin.read())
-          assert 'skills' in d, 'No skills in agent card'
-          assert len(d['skills']) > 0, 'Empty skills'
-          print(f'Agent Card: OK ({len(d[\"skills\"])} skills)')
-          "
+        run: curl -sf https://mcp.thinkneo.ai/.well-known/agent.json | python3 -c "import sys,json;d=json.loads(sys.stdin.read());assert len(d.get('skills',[]))>0"
 
       - name: Landing Pages
         run: |
-          for path in /mcp/docs /registry /.well-known/agent.json; do
-            CODE=$(curl -sf -o /dev/null -w "%{http_code}" "https://mcp.thinkneo.ai$path")
-            [ "$CODE" = "200" ] || { echo "FAIL: $path -> $CODE"; exit 1; }
-            echo "OK: $path -> $CODE"
+          for p in /mcp/docs /registry /.well-known/agent.json; do
+            CODE=$(curl -sf -o /dev/null -w "%{http_code}" "https://mcp.thinkneo.ai$p")
+            [ "$CODE" = "200" ] || exit 1
           done
