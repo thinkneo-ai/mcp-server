@@ -56,12 +56,12 @@ jobs:
         run: |
           echo "Scanning for hardcoded secrets..."
           FOUND=0
-          # Check for common secret patterns in tracked files
+          # Check for common secret patterns in source files (exclude test fixtures)
           for pattern in 'AKIA[0-9A-Z]{16}' 'ghp_[a-zA-Z0-9]{36}' 'sk-[a-zA-Z0-9]{20,}' '-----BEGIN.*PRIVATE KEY'; do
-            MATCHES=$(grep -rlE "$pattern" src/ tests/ 2>/dev/null | grep -v __pycache__ | wc -l)
+            MATCHES=$(grep -rlE "$pattern" src/ 2>/dev/null | grep -v __pycache__ | wc -l)
             if [ "$MATCHES" -gt 0 ]; then
               echo "::error::Secret pattern '$pattern' found in $MATCHES files"
-              grep -rlE "$pattern" src/ tests/ 2>/dev/null | grep -v __pycache__
+              grep -rlE "$pattern" src/ 2>/dev/null | grep -v __pycache__
               FOUND=1
             fi
           done
