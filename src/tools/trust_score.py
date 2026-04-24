@@ -4,14 +4,17 @@ Tools: thinkneo_evaluate_trust_score, thinkneo_get_trust_badge
 AI Trust Score — a quantifiable score (0-100) that measures how well-governed
 an organization's AI stack is. Like a credit score but for AI deployments.
 
-Categories (7, total 100 points):
-  - Guardrails       (15 pts)
-  - PII Protection   (10 pts)
-  - Injection Defense (10 pts)
-  - Audit Trail      (15 pts)
-  - Compliance       (20 pts)
-  - Model Governance (15 pts)
-  - Cost Controls    (15 pts)
+Categories (10, total 100 points):
+  - Guardrails          (10 pts)
+  - PII Protection       (8 pts)
+  - Injection Defense    (8 pts)
+  - Audit Trail         (10 pts)
+  - Compliance          (12 pts)
+  - Model Governance    (10 pts)
+  - Cost Controls       (10 pts)
+  - Outcome Validation  (14 pts) — "From Prompt to Proof"
+  - Observability       (12 pts)
+  - Smart Routing        (6 pts)
 
 Badge levels:
   90-100  Platinum
@@ -61,12 +64,35 @@ BADGE_LABELS = {
     "unrated": "Unrated",
 }
 
+
 # ---------------------------------------------------------------------------
-# Scoring engine — evaluates each category
+# Helper: count tool calls in usage_log
+# ---------------------------------------------------------------------------
+
+def _count_tool_calls(cur, key_hash: str, tool_names: list, days: int = 30) -> int:
+    """Count usage_log entries for any of the given tool names in the last N days."""
+    if not tool_names:
+        return 0
+    placeholders = ",".join(["%s"] * len(tool_names))
+    cur.execute(
+        f"""
+        SELECT COUNT(*) as cnt FROM usage_log
+        WHERE key_hash = %s
+          AND tool_name IN ({placeholders})
+          AND called_at >= NOW() - INTERVAL '{days} days'
+        """,
+        (key_hash, *tool_names),
+    )
+    row = cur.fetchone()
+    return row["cnt"] if row else 0
+
+
+# ---------------------------------------------------------------------------
+# Scoring engine — 10 categories
 # ---------------------------------------------------------------------------
 
 def _score_guardrails(key_hash: str) -> Dict[str, Any]:
-    """Check if the org has used evaluate_guardrail tool recently."""
+    """Guardrails usage: evaluate_guardrail + check (free tier)."""
     score = 0
     findings: List[str] = []
     recommendations: List[str] = []
@@ -74,42 +100,35 @@ def _score_guardrails(key_hash: str) -> Dict[str, Any]:
     try:
         with _get_conn() as conn:
             with conn.cursor() as cur:
-                # Check guardrail tool usage in last 30 days
-                cur.execute(
-                    """
-                    SELECT COUNT(*) as cnt FROM usage_log
-                    WHERE key_hash = %s
-                      AND tool_name = 'thinkneo_evaluate_guardrail'
-                      AND called_at >= NOW() - INTERVAL '30 days'
-                    """,
-                    (key_hash,),
-                )
-                row = cur.fetchone()
-                guardrail_calls = row["cnt"] if row else 0
+                calls = _count_tool_calls(cur, key_hash, [
+                    "thinkneo_evaluate_guardrail", "thinkneo_check",
+                ])
 
-                if guardrail_calls >= 50:
-                    score = 15
-                    findings.append(f"Active guardrail usage: {guardrail_calls} evaluations in 30 days")
-                elif guardrail_calls >= 10:
+                if calls >= 50:
                     score = 10
-                    findings.append(f"Moderate guardrail usage: {guardrail_calls} evaluations in 30 days")
-                    recommendations.append("Increase guardrail evaluation frequency for higher coverage")
-                elif guardrail_calls >= 1:
-                    score = 5
-                    findings.append(f"Minimal guardrail usage: {guardrail_calls} evaluations in 30 days")
-                    recommendations.append("Integrate guardrail checks into your AI pipeline for every request")
+                    findings.append(f"Active guardrail usage: {calls} evaluations in 30 days")
+                elif calls >= 15:
+                    score = 7
+                    findings.append(f"Good guardrail usage: {calls} evaluations in 30 days")
+                elif calls >= 5:
+                    score = 4
+                    findings.append(f"Moderate guardrail usage: {calls} evaluations")
+                    recommendations.append("Increase guardrail evaluation frequency")
+                elif calls >= 1:
+                    score = 2
+                    findings.append(f"Minimal guardrail usage: {calls} evaluations")
+                    recommendations.append("Integrate guardrail checks into your AI pipeline")
                 else:
-                    findings.append("No guardrail evaluations detected in last 30 days")
-                    recommendations.append("Enable thinkneo_evaluate_guardrail in your AI pipeline to detect policy violations")
+                    findings.append("No guardrail evaluations detected")
+                    recommendations.append("Enable guardrail evaluation in your AI pipeline")
     except Exception:
         findings.append("Unable to assess guardrail configuration")
-        recommendations.append("Configure and use guardrail evaluation tools")
 
-    return {"score": score, "max": 15, "findings": findings, "recommendations": recommendations}
+    return {"score": score, "max": 10, "findings": findings, "recommendations": recommendations}
 
 
 def _score_pii_protection(key_hash: str) -> Dict[str, Any]:
-    """Check PII detection tool usage."""
+    """PII detection tool usage."""
     score = 0
     findings: List[str] = []
     recommendations: List[str] = []
@@ -117,41 +136,31 @@ def _score_pii_protection(key_hash: str) -> Dict[str, Any]:
     try:
         with _get_conn() as conn:
             with conn.cursor() as cur:
-                cur.execute(
-                    """
-                    SELECT COUNT(*) as cnt FROM usage_log
-                    WHERE key_hash = %s
-                      AND tool_name = 'thinkneo_check_pii_international'
-                      AND called_at >= NOW() - INTERVAL '30 days'
-                    """,
-                    (key_hash,),
-                )
-                row = cur.fetchone()
-                pii_calls = row["cnt"] if row else 0
+                calls = _count_tool_calls(cur, key_hash, [
+                    "thinkneo_check_pii_international",
+                ])
 
-                if pii_calls >= 30:
-                    score = 10
-                    findings.append(f"Active PII scanning: {pii_calls} checks in 30 days")
-                elif pii_calls >= 5:
-                    score = 6
-                    findings.append(f"Moderate PII scanning: {pii_calls} checks in 30 days")
-                    recommendations.append("Increase PII scanning frequency — scan all user inputs")
-                elif pii_calls >= 1:
+                if calls >= 30:
+                    score = 8
+                    findings.append(f"Active PII scanning: {calls} checks")
+                elif calls >= 10:
+                    score = 5
+                    findings.append(f"Good PII scanning: {calls} checks")
+                elif calls >= 1:
                     score = 3
-                    findings.append(f"Minimal PII scanning: {pii_calls} checks in 30 days")
-                    recommendations.append("Integrate PII detection into your data processing pipeline")
+                    findings.append(f"Minimal PII scanning: {calls} checks")
+                    recommendations.append("Increase PII scanning frequency")
                 else:
-                    findings.append("No PII scanning detected in last 30 days")
-                    recommendations.append("Enable thinkneo_check_pii_international to detect sensitive data before it reaches AI models")
+                    findings.append("No PII scanning detected")
+                    recommendations.append("Enable PII detection to protect sensitive data")
     except Exception:
-        findings.append("Unable to assess PII protection configuration")
-        recommendations.append("Configure PII detection scanning")
+        findings.append("Unable to assess PII protection")
 
-    return {"score": score, "max": 10, "findings": findings, "recommendations": recommendations}
+    return {"score": score, "max": 8, "findings": findings, "recommendations": recommendations}
 
 
 def _score_injection_defense(key_hash: str) -> Dict[str, Any]:
-    """Check injection detection tool usage."""
+    """Injection detection tool usage."""
     score = 0
     findings: List[str] = []
     recommendations: List[str] = []
@@ -159,41 +168,31 @@ def _score_injection_defense(key_hash: str) -> Dict[str, Any]:
     try:
         with _get_conn() as conn:
             with conn.cursor() as cur:
-                cur.execute(
-                    """
-                    SELECT COUNT(*) as cnt FROM usage_log
-                    WHERE key_hash = %s
-                      AND tool_name = 'thinkneo_detect_injection'
-                      AND called_at >= NOW() - INTERVAL '30 days'
-                    """,
-                    (key_hash,),
-                )
-                row = cur.fetchone()
-                injection_calls = row["cnt"] if row else 0
+                calls = _count_tool_calls(cur, key_hash, [
+                    "thinkneo_detect_injection",
+                ])
 
-                if injection_calls >= 30:
-                    score = 10
-                    findings.append(f"Active injection defense: {injection_calls} scans in 30 days")
-                elif injection_calls >= 5:
-                    score = 6
-                    findings.append(f"Moderate injection defense: {injection_calls} scans in 30 days")
-                    recommendations.append("Scan all untrusted inputs before LLM processing")
-                elif injection_calls >= 1:
+                if calls >= 30:
+                    score = 8
+                    findings.append(f"Active injection defense: {calls} scans")
+                elif calls >= 10:
+                    score = 5
+                    findings.append(f"Good injection defense: {calls} scans")
+                elif calls >= 1:
                     score = 3
-                    findings.append(f"Minimal injection defense: {injection_calls} scans in 30 days")
-                    recommendations.append("Integrate prompt injection detection into your request pipeline")
+                    findings.append(f"Minimal injection defense: {calls} scans")
+                    recommendations.append("Scan all untrusted inputs for injection")
                 else:
-                    findings.append("No injection scanning detected in last 30 days")
-                    recommendations.append("Enable thinkneo_detect_injection to catch jailbreaks and prompt injection before they reach your models")
+                    findings.append("No injection scanning detected")
+                    recommendations.append("Enable prompt injection detection")
     except Exception:
-        findings.append("Unable to assess injection defense configuration")
-        recommendations.append("Configure injection detection scanning")
+        findings.append("Unable to assess injection defense")
 
-    return {"score": score, "max": 10, "findings": findings, "recommendations": recommendations}
+    return {"score": score, "max": 8, "findings": findings, "recommendations": recommendations}
 
 
 def _score_audit_trail(key_hash: str) -> Dict[str, Any]:
-    """Check audit trail / usage logging patterns."""
+    """Audit trail: total calls, diversity, active days, freshness."""
     score = 0
     findings: List[str] = []
     recommendations: List[str] = []
@@ -201,12 +200,12 @@ def _score_audit_trail(key_hash: str) -> Dict[str, Any]:
     try:
         with _get_conn() as conn:
             with conn.cursor() as cur:
-                # Check total logged calls (audit trail = usage logging)
                 cur.execute(
                     """
                     SELECT COUNT(*) as cnt,
                            COUNT(DISTINCT tool_name) as tools_used,
-                           COUNT(DISTINCT DATE(called_at)) as active_days
+                           COUNT(DISTINCT DATE(called_at)) as active_days,
+                           MAX(called_at) as last_call
                     FROM usage_log
                     WHERE key_hash = %s
                       AND called_at >= NOW() - INTERVAL '30 days'
@@ -217,64 +216,57 @@ def _score_audit_trail(key_hash: str) -> Dict[str, Any]:
                 total_calls = row["cnt"] if row else 0
                 tools_used = row["tools_used"] if row else 0
                 active_days = row["active_days"] if row else 0
+                last_call = row["last_call"]
 
-                # Check usage tool calls (org actively monitors usage)
-                cur.execute(
-                    """
-                    SELECT COUNT(*) as cnt FROM usage_log
-                    WHERE key_hash = %s
-                      AND tool_name = 'thinkneo_usage'
-                      AND called_at >= NOW() - INTERVAL '30 days'
-                    """,
-                    (key_hash,),
-                )
-                usage_row = cur.fetchone()
-                usage_checks = usage_row["cnt"] if usage_row else 0
-
+                # Volume + consistency (5 pts)
                 if total_calls >= 100 and active_days >= 15:
-                    score += 8
-                    findings.append(f"Consistent audit trail: {total_calls} logged events across {active_days} active days")
-                elif total_calls >= 20:
                     score += 5
-                    findings.append(f"Moderate audit trail: {total_calls} logged events across {active_days} active days")
-                    recommendations.append("Increase usage consistency — aim for daily API governance checks")
-                elif total_calls >= 1:
-                    score += 2
-                    findings.append(f"Minimal audit trail: {total_calls} logged events")
-                    recommendations.append("Establish regular governance monitoring habits")
-                else:
-                    findings.append("No audit trail detected in last 30 days")
-                    recommendations.append("Start using ThinkNEO governance tools to build an audit trail")
-
-                if usage_checks >= 5:
-                    score += 4
-                    findings.append(f"Active usage monitoring: {usage_checks} checks")
-                elif usage_checks >= 1:
-                    score += 2
-                    findings.append(f"Minimal usage monitoring: {usage_checks} checks")
-                    recommendations.append("Monitor usage regularly via thinkneo_usage")
-                else:
-                    recommendations.append("Use thinkneo_usage to monitor your API governance metrics")
-
-                if tools_used >= 5:
+                    findings.append(f"Strong audit trail: {total_calls} events across {active_days} days")
+                elif total_calls >= 30:
                     score += 3
-                    findings.append(f"Broad tool coverage: {tools_used} different governance tools used")
-                elif tools_used >= 2:
+                    findings.append(f"Moderate audit trail: {total_calls} events across {active_days} days")
+                elif total_calls >= 5:
                     score += 1
-                    findings.append(f"Limited tool coverage: {tools_used} tools used")
-                    recommendations.append("Explore more governance tools for comprehensive coverage")
+                    findings.append(f"Minimal audit trail: {total_calls} events")
+                    recommendations.append("Increase governance monitoring frequency")
+                else:
+                    findings.append("No significant audit trail")
+                    recommendations.append("Start using governance tools to build audit trail")
 
-                score = min(score, 15)
+                # Tool diversity (3 pts)
+                if tools_used >= 8:
+                    score += 3
+                    findings.append(f"Broad coverage: {tools_used} different tools used")
+                elif tools_used >= 4:
+                    score += 2
+                    findings.append(f"Moderate coverage: {tools_used} tools used")
+                elif tools_used >= 1:
+                    score += 1
+                    findings.append(f"Limited coverage: {tools_used} tools")
+                    recommendations.append("Explore more governance tools")
+
+                # Freshness (2 pts)
+                if last_call:
+                    hours_since = (datetime.now(timezone.utc) - last_call.replace(tzinfo=timezone.utc if last_call.tzinfo is None else last_call.tzinfo)).total_seconds() / 3600
+                    if hours_since < 24:
+                        score += 2
+                        findings.append("Audit trail is fresh (< 24h)")
+                    elif hours_since < 168:
+                        score += 1
+                        findings.append("Recent activity (< 7 days)")
+                    else:
+                        recommendations.append("Resume regular governance monitoring")
+
+                score = min(score, 10)
 
     except Exception:
         findings.append("Unable to assess audit trail")
-        recommendations.append("Enable audit trail logging")
 
-    return {"score": score, "max": 15, "findings": findings, "recommendations": recommendations}
+    return {"score": score, "max": 10, "findings": findings, "recommendations": recommendations}
 
 
 def _score_compliance(key_hash: str) -> Dict[str, Any]:
-    """Check compliance status tool usage."""
+    """Compliance status, policy checks, secret scanning."""
     score = 0
     findings: List[str] = []
     recommendations: List[str] = []
@@ -282,87 +274,59 @@ def _score_compliance(key_hash: str) -> Dict[str, Any]:
     try:
         with _get_conn() as conn:
             with conn.cursor() as cur:
-                cur.execute(
-                    """
-                    SELECT COUNT(*) as cnt FROM usage_log
-                    WHERE key_hash = %s
-                      AND tool_name = 'thinkneo_get_compliance_status'
-                      AND called_at >= NOW() - INTERVAL '30 days'
-                    """,
-                    (key_hash,),
-                )
-                row = cur.fetchone()
-                compliance_calls = row["cnt"] if row else 0
+                compliance_calls = _count_tool_calls(cur, key_hash, [
+                    "thinkneo_get_compliance_status",
+                ])
+                policy_calls = _count_tool_calls(cur, key_hash, [
+                    "thinkneo_check_policy", "thinkneo_policy_evaluate",
+                    "thinkneo_policy_list", "thinkneo_a2a_set_policy",
+                ])
+                secret_calls = _count_tool_calls(cur, key_hash, [
+                    "thinkneo_scan_secrets",
+                ])
 
-                # Check policy checks
-                cur.execute(
-                    """
-                    SELECT COUNT(*) as cnt FROM usage_log
-                    WHERE key_hash = %s
-                      AND tool_name = 'thinkneo_check_policy'
-                      AND called_at >= NOW() - INTERVAL '30 days'
-                    """,
-                    (key_hash,),
-                )
-                policy_row = cur.fetchone()
-                policy_calls = policy_row["cnt"] if policy_row else 0
-
-                # Check secret scanning
-                cur.execute(
-                    """
-                    SELECT COUNT(*) as cnt FROM usage_log
-                    WHERE key_hash = %s
-                      AND tool_name = 'thinkneo_scan_secrets'
-                      AND called_at >= NOW() - INTERVAL '30 days'
-                    """,
-                    (key_hash,),
-                )
-                secret_row = cur.fetchone()
-                secret_calls = secret_row["cnt"] if secret_row else 0
-
-                if compliance_calls >= 10:
-                    score += 8
-                    findings.append(f"Active compliance monitoring: {compliance_calls} checks in 30 days")
+                # Compliance checks (5 pts)
+                if compliance_calls >= 5:
+                    score += 5
+                    findings.append(f"Active compliance monitoring: {compliance_calls} checks")
                 elif compliance_calls >= 1:
-                    score += 4
-                    findings.append(f"Minimal compliance monitoring: {compliance_calls} checks")
-                    recommendations.append("Run compliance checks regularly (weekly recommended)")
+                    score += 3
+                    findings.append(f"Compliance monitoring active: {compliance_calls} checks")
                 else:
                     findings.append("No compliance checks detected")
-                    recommendations.append("Use thinkneo_get_compliance_status to assess SOC2/GDPR/HIPAA/LGPD readiness")
+                    recommendations.append("Run compliance checks regularly")
 
+                # Policy enforcement (4 pts)
                 if policy_calls >= 10:
-                    score += 7
-                    findings.append(f"Active policy enforcement: {policy_calls} policy checks")
+                    score += 4
+                    findings.append(f"Active policy enforcement: {policy_calls} evaluations")
                 elif policy_calls >= 1:
-                    score += 3
-                    findings.append(f"Minimal policy checks: {policy_calls}")
-                    recommendations.append("Enforce model and provider policies via thinkneo_check_policy")
+                    score += 2
+                    findings.append(f"Policy checks active: {policy_calls}")
                 else:
                     findings.append("No policy enforcement detected")
-                    recommendations.append("Configure and enforce AI model/provider policies")
+                    recommendations.append("Configure AI policies")
 
-                if secret_calls >= 5:
-                    score += 5
+                # Secret scanning (3 pts)
+                if secret_calls >= 3:
+                    score += 3
                     findings.append(f"Active secret scanning: {secret_calls} scans")
                 elif secret_calls >= 1:
-                    score += 2
-                    findings.append(f"Minimal secret scanning: {secret_calls} scans")
-                    recommendations.append("Scan for exposed secrets regularly")
+                    score += 1
+                    findings.append(f"Secret scanning active: {secret_calls}")
                 else:
-                    recommendations.append("Use thinkneo_scan_secrets to detect leaked credentials in prompts")
+                    recommendations.append("Scan for exposed secrets in prompts")
 
-                score = min(score, 20)
+                score = min(score, 12)
 
     except Exception:
-        findings.append("Unable to assess compliance configuration")
-        recommendations.append("Configure compliance monitoring tools")
+        findings.append("Unable to assess compliance")
 
-    return {"score": score, "max": 20, "findings": findings, "recommendations": recommendations}
+    return {"score": score, "max": 12, "findings": findings, "recommendations": recommendations}
 
 
 def _score_model_governance(key_hash: str) -> Dict[str, Any]:
-    """Check model governance tool usage."""
+    """Model governance: provider monitoring, model comparison, prompt optimization."""
     score = 0
     findings: List[str] = []
     recommendations: List[str] = []
@@ -370,117 +334,57 @@ def _score_model_governance(key_hash: str) -> Dict[str, Any]:
     try:
         with _get_conn() as conn:
             with conn.cursor() as cur:
-                # Check model comparison usage
-                cur.execute(
-                    """
-                    SELECT COUNT(*) as cnt FROM usage_log
-                    WHERE key_hash = %s
-                      AND tool_name = 'thinkneo_compare_models'
-                      AND called_at >= NOW() - INTERVAL '30 days'
-                    """,
-                    (key_hash,),
-                )
-                row = cur.fetchone()
-                compare_calls = row["cnt"] if row else 0
+                provider_calls = _count_tool_calls(cur, key_hash, [
+                    "thinkneo_provider_status",
+                ])
+                routing_calls = _count_tool_calls(cur, key_hash, [
+                    "thinkneo_route_model", "thinkneo_simulate_savings",
+                ])
+                governance_calls = _count_tool_calls(cur, key_hash, [
+                    "thinkneo_compare_models", "thinkneo_optimize_prompt",
+                    "thinkneo_detect_waste", "thinkneo_set_baseline",
+                ])
 
-                # Check prompt optimization
-                cur.execute(
-                    """
-                    SELECT COUNT(*) as cnt FROM usage_log
-                    WHERE key_hash = %s
-                      AND tool_name = 'thinkneo_optimize_prompt'
-                      AND called_at >= NOW() - INTERVAL '30 days'
-                    """,
-                    (key_hash,),
-                )
-                opt_row = cur.fetchone()
-                optimize_calls = opt_row["cnt"] if opt_row else 0
-
-                # Check token estimation
-                cur.execute(
-                    """
-                    SELECT COUNT(*) as cnt FROM usage_log
-                    WHERE key_hash = %s
-                      AND tool_name = 'thinkneo_estimate_tokens'
-                      AND called_at >= NOW() - INTERVAL '30 days'
-                    """,
-                    (key_hash,),
-                )
-                token_row = cur.fetchone()
-                token_calls = token_row["cnt"] if token_row else 0
-
-                # Check provider status monitoring
-                cur.execute(
-                    """
-                    SELECT COUNT(*) as cnt FROM usage_log
-                    WHERE key_hash = %s
-                      AND tool_name = 'thinkneo_provider_status'
-                      AND called_at >= NOW() - INTERVAL '30 days'
-                    """,
-                    (key_hash,),
-                )
-                provider_row = cur.fetchone()
-                provider_calls = provider_row["cnt"] if provider_row else 0
-
-                if compare_calls >= 5:
-                    score += 5
-                    findings.append(f"Active model comparison: {compare_calls} evaluations")
-                elif compare_calls >= 1:
-                    score += 2
-                    findings.append(f"Minimal model comparison: {compare_calls}")
-                    recommendations.append("Compare models regularly to ensure optimal governance")
-                else:
-                    recommendations.append("Use thinkneo_compare_models to evaluate approved model lists")
-
-                if optimize_calls >= 5:
+                # Provider monitoring (4 pts)
+                if provider_calls >= 5:
                     score += 4
-                    findings.append(f"Active prompt optimization: {optimize_calls} optimizations")
-                elif optimize_calls >= 1:
+                    findings.append(f"Active provider monitoring: {provider_calls} checks")
+                elif provider_calls >= 1:
                     score += 2
-                    findings.append(f"Minimal prompt optimization: {optimize_calls}")
+                    findings.append(f"Provider monitoring: {provider_calls} checks")
                 else:
-                    recommendations.append("Optimize prompts for safety and efficiency with thinkneo_optimize_prompt")
+                    recommendations.append("Monitor provider health regularly")
 
-                if token_calls >= 5 or provider_calls >= 5:
+                # Smart routing (3 pts)
+                if routing_calls >= 5:
                     score += 3
-                    findings.append("Active resource monitoring")
-                elif token_calls >= 1 or provider_calls >= 1:
+                    findings.append(f"Smart routing active: {routing_calls} routing decisions")
+                elif routing_calls >= 1:
+                    score += 2
+                    findings.append(f"Routing used: {routing_calls} decisions")
+                else:
+                    recommendations.append("Use smart routing for cost-optimized model selection")
+
+                # Advanced governance (3 pts)
+                if governance_calls >= 3:
+                    score += 3
+                    findings.append(f"Advanced governance tools active: {governance_calls} uses")
+                elif governance_calls >= 1:
                     score += 1
-                    findings.append("Minimal resource monitoring")
-                    recommendations.append("Monitor token usage and provider health regularly")
+                    findings.append(f"Some advanced governance: {governance_calls} uses")
                 else:
-                    recommendations.append("Track token usage and provider health for operational governance")
+                    recommendations.append("Use waste detection and baseline tools")
 
-                # Check key rotation
-                cur.execute(
-                    """
-                    SELECT COUNT(*) as cnt FROM usage_log
-                    WHERE key_hash = %s
-                      AND tool_name = 'thinkneo_rotate_key'
-                      AND called_at >= NOW() - INTERVAL '90 days'
-                    """,
-                    (key_hash,),
-                )
-                rotate_row = cur.fetchone()
-                rotate_calls = rotate_row["cnt"] if rotate_row else 0
-
-                if rotate_calls >= 1:
-                    score += 3
-                    findings.append("API key rotation practiced")
-                else:
-                    recommendations.append("Rotate API keys periodically via thinkneo_rotate_key")
-
-                score = min(score, 15)
+                score = min(score, 10)
 
     except Exception:
         findings.append("Unable to assess model governance")
-        recommendations.append("Configure model governance tools")
 
-    return {"score": score, "max": 15, "findings": findings, "recommendations": recommendations}
+    return {"score": score, "max": 10, "findings": findings, "recommendations": recommendations}
 
 
 def _score_cost_controls(key_hash: str) -> Dict[str, Any]:
-    """Check cost control tool usage."""
+    """Cost controls: budget, spend, alerts, savings."""
     score = 0
     findings: List[str] = []
     recommendations: List[str] = []
@@ -488,106 +392,271 @@ def _score_cost_controls(key_hash: str) -> Dict[str, Any]:
     try:
         with _get_conn() as conn:
             with conn.cursor() as cur:
-                # Check budget monitoring
-                cur.execute(
-                    """
-                    SELECT COUNT(*) as cnt FROM usage_log
-                    WHERE key_hash = %s
-                      AND tool_name = 'thinkneo_get_budget_status'
-                      AND called_at >= NOW() - INTERVAL '30 days'
-                    """,
-                    (key_hash,),
-                )
-                row = cur.fetchone()
-                budget_calls = row["cnt"] if row else 0
+                budget_calls = _count_tool_calls(cur, key_hash, [
+                    "thinkneo_get_budget_status",
+                ])
+                spend_calls = _count_tool_calls(cur, key_hash, [
+                    "thinkneo_check_spend", "thinkneo_get_savings_report",
+                    "thinkneo_decision_cost", "thinkneo_agent_roi",
+                ])
+                alert_calls = _count_tool_calls(cur, key_hash, [
+                    "thinkneo_list_alerts",
+                ])
 
-                # Check spend monitoring
-                cur.execute(
-                    """
-                    SELECT COUNT(*) as cnt FROM usage_log
-                    WHERE key_hash = %s
-                      AND tool_name = 'thinkneo_check_spend'
-                      AND called_at >= NOW() - INTERVAL '30 days'
-                    """,
-                    (key_hash,),
-                )
-                spend_row = cur.fetchone()
-                spend_calls = spend_row["cnt"] if spend_row else 0
-
-                # Check alert monitoring
-                cur.execute(
-                    """
-                    SELECT COUNT(*) as cnt FROM usage_log
-                    WHERE key_hash = %s
-                      AND tool_name = 'thinkneo_list_alerts'
-                      AND called_at >= NOW() - INTERVAL '30 days'
-                    """,
-                    (key_hash,),
-                )
-                alert_row = cur.fetchone()
-                alert_calls = alert_row["cnt"] if alert_row else 0
-
-                # Check cache usage (cost optimization)
-                cur.execute(
-                    """
-                    SELECT COUNT(*) as cnt FROM usage_log
-                    WHERE key_hash = %s
-                      AND tool_name IN ('thinkneo_cache_lookup', 'thinkneo_cache_store', 'thinkneo_cache_stats')
-                      AND called_at >= NOW() - INTERVAL '30 days'
-                    """,
-                    (key_hash,),
-                )
-                cache_row = cur.fetchone()
-                cache_calls = cache_row["cnt"] if cache_row else 0
-
+                # Budget monitoring (4 pts)
                 if budget_calls >= 5:
-                    score += 5
+                    score += 4
                     findings.append(f"Active budget monitoring: {budget_calls} checks")
                 elif budget_calls >= 1:
                     score += 2
-                    findings.append(f"Minimal budget monitoring: {budget_calls} checks")
-                    recommendations.append("Check budget status weekly to prevent cost overruns")
+                    findings.append(f"Budget monitoring: {budget_calls} checks")
                 else:
-                    findings.append("No budget monitoring detected")
-                    recommendations.append("Use thinkneo_get_budget_status to set and monitor AI spend limits")
+                    findings.append("No budget monitoring")
+                    recommendations.append("Set and monitor AI spend limits")
 
+                # Spend tracking (4 pts)
                 if spend_calls >= 5:
-                    score += 5
-                    findings.append(f"Active spend tracking: {spend_calls} reports")
+                    score += 4
+                    findings.append(f"Active cost tracking: {spend_calls} reports")
                 elif spend_calls >= 1:
                     score += 2
-                    findings.append(f"Minimal spend tracking: {spend_calls} reports")
-                    recommendations.append("Track AI spend regularly via thinkneo_check_spend")
+                    findings.append(f"Cost tracking: {spend_calls} reports")
                 else:
-                    findings.append("No spend tracking detected")
-                    recommendations.append("Monitor AI costs by provider/model with thinkneo_check_spend")
+                    findings.append("No spend tracking")
+                    recommendations.append("Monitor AI costs regularly")
 
+                # Alert monitoring (2 pts)
                 if alert_calls >= 3:
-                    score += 3
+                    score += 2
                     findings.append(f"Alert monitoring active: {alert_calls} checks")
                 elif alert_calls >= 1:
                     score += 1
-                    findings.append(f"Minimal alert monitoring: {alert_calls}")
+                    findings.append(f"Alert monitoring: {alert_calls} checks")
                 else:
-                    recommendations.append("Monitor alerts via thinkneo_list_alerts for cost anomalies")
+                    recommendations.append("Monitor alerts for cost anomalies")
 
-                if cache_calls >= 5:
-                    score += 2
-                    findings.append("Response caching active (cost optimization)")
-                elif cache_calls >= 1:
-                    score += 1
-                    findings.append("Minimal cache usage")
-                    recommendations.append("Use response caching to reduce redundant API calls and costs")
-                else:
-                    recommendations.append("Enable response caching for cost optimization")
-
-                score = min(score, 15)
+                score = min(score, 10)
 
     except Exception:
         findings.append("Unable to assess cost controls")
-        recommendations.append("Configure budget and spend monitoring")
 
-    return {"score": score, "max": 15, "findings": findings, "recommendations": recommendations}
+    return {"score": score, "max": 10, "findings": findings, "recommendations": recommendations}
+
+
+def _score_outcome_validation(key_hash: str) -> Dict[str, Any]:
+    """Outcome Validation: claims registered, verified, verification rate."""
+    score = 0
+    findings: List[str] = []
+    recommendations: List[str] = []
+
+    try:
+        with _get_conn() as conn:
+            with conn.cursor() as cur:
+                # Tool usage
+                claim_calls = _count_tool_calls(cur, key_hash, [
+                    "thinkneo_register_claim", "thinkneo_verify_claim",
+                    "thinkneo_get_proof", "thinkneo_verification_dashboard",
+                ])
+
+                # Tool usage score (6 pts)
+                if claim_calls >= 20:
+                    score += 6
+                    findings.append(f"Active outcome validation: {claim_calls} operations")
+                elif claim_calls >= 5:
+                    score += 4
+                    findings.append(f"Good outcome validation: {claim_calls} operations")
+                elif claim_calls >= 1:
+                    score += 2
+                    findings.append(f"Outcome validation started: {claim_calls} operations")
+                    recommendations.append("Register and verify more agent claims")
+                else:
+                    findings.append("No outcome validation detected")
+                    recommendations.append("Use register_claim + verify_claim to prove AI outcomes")
+
+                # Actual verification data (8 pts)
+                try:
+                    cur.execute(
+                        """
+                        SELECT
+                            COUNT(*) AS total,
+                            COUNT(*) FILTER (WHERE status = 'verified') AS verified,
+                            COUNT(*) FILTER (WHERE status = 'failed') AS failed
+                        FROM outcome_claims
+                        WHERE api_key_hash = %s
+                          AND claimed_at >= NOW() - INTERVAL '30 days'
+                        """,
+                        (key_hash,),
+                    )
+                    row = cur.fetchone()
+                    total = row["total"] if row else 0
+                    verified = row["verified"] if row else 0
+                    failed = row["failed"] if row else 0
+                    decidable = verified + failed
+
+                    if total >= 10 and decidable > 0:
+                        rate = verified / decidable * 100
+                        if rate >= 90:
+                            score += 8
+                            findings.append(f"Excellent verification rate: {rate:.0f}% ({verified}/{decidable})")
+                        elif rate >= 70:
+                            score += 6
+                            findings.append(f"Good verification rate: {rate:.0f}% ({verified}/{decidable})")
+                        elif rate >= 50:
+                            score += 4
+                            findings.append(f"Moderate verification rate: {rate:.0f}% ({verified}/{decidable})")
+                            recommendations.append("Improve agent reliability to increase verification rate")
+                        else:
+                            score += 2
+                            findings.append(f"Low verification rate: {rate:.0f}% ({verified}/{decidable})")
+                            recommendations.append("Investigate failing claims — agents may need fixes")
+                    elif total >= 1:
+                        score += 3
+                        findings.append(f"Outcome tracking started: {total} claims")
+                        recommendations.append("Increase claim volume for meaningful verification metrics")
+                    else:
+                        recommendations.append("Start tracking agent outcomes with register_claim")
+                except Exception:
+                    pass  # outcome_claims table may not exist yet
+
+                score = min(score, 14)
+
+    except Exception:
+        findings.append("Unable to assess outcome validation")
+
+    return {"score": score, "max": 14, "findings": findings, "recommendations": recommendations}
+
+
+def _score_observability(key_hash: str) -> Dict[str, Any]:
+    """Observability: traces, events, dashboard usage."""
+    score = 0
+    findings: List[str] = []
+    recommendations: List[str] = []
+
+    try:
+        with _get_conn() as conn:
+            with conn.cursor() as cur:
+                trace_calls = _count_tool_calls(cur, key_hash, [
+                    "thinkneo_start_trace", "thinkneo_end_trace",
+                    "thinkneo_log_event", "thinkneo_get_trace",
+                ])
+                dashboard_calls = _count_tool_calls(cur, key_hash, [
+                    "thinkneo_get_observability_dashboard",
+                ])
+
+                # Trace usage (7 pts)
+                if trace_calls >= 20:
+                    score += 7
+                    findings.append(f"Active agent tracing: {trace_calls} trace operations")
+                elif trace_calls >= 5:
+                    score += 5
+                    findings.append(f"Good tracing coverage: {trace_calls} operations")
+                elif trace_calls >= 1:
+                    score += 2
+                    findings.append(f"Tracing started: {trace_calls} operations")
+                    recommendations.append("Trace all agent sessions for full observability")
+                else:
+                    findings.append("No agent tracing detected")
+                    recommendations.append("Use start_trace/log_event/end_trace for agent observability")
+
+                # Dashboard monitoring (3 pts)
+                if dashboard_calls >= 5:
+                    score += 3
+                    findings.append(f"Active dashboard monitoring: {dashboard_calls} views")
+                elif dashboard_calls >= 1:
+                    score += 2
+                    findings.append(f"Dashboard used: {dashboard_calls} views")
+                else:
+                    recommendations.append("Monitor agent health via observability dashboard")
+
+                # Actual session data (2 pts)
+                try:
+                    cur.execute(
+                        """
+                        SELECT COUNT(*) AS cnt
+                        FROM agent_sessions
+                        WHERE api_key_hash = %s
+                          AND started_at >= NOW() - INTERVAL '30 days'
+                        """,
+                        (key_hash,),
+                    )
+                    row = cur.fetchone()
+                    sessions = row["cnt"] if row else 0
+                    if sessions >= 5:
+                        score += 2
+                        findings.append(f"Active sessions tracked: {sessions}")
+                    elif sessions >= 1:
+                        score += 1
+                        findings.append(f"Sessions tracked: {sessions}")
+                except Exception:
+                    pass
+
+                score = min(score, 12)
+
+    except Exception:
+        findings.append("Unable to assess observability")
+
+    return {"score": score, "max": 12, "findings": findings, "recommendations": recommendations}
+
+
+def _score_smart_routing(key_hash: str) -> Dict[str, Any]:
+    """Smart Routing: cost optimization through intelligent model selection."""
+    score = 0
+    findings: List[str] = []
+    recommendations: List[str] = []
+
+    try:
+        with _get_conn() as conn:
+            with conn.cursor() as cur:
+                routing_calls = _count_tool_calls(cur, key_hash, [
+                    "thinkneo_route_model", "thinkneo_get_savings_report",
+                    "thinkneo_simulate_savings",
+                ])
+
+                if routing_calls >= 10:
+                    score += 4
+                    findings.append(f"Active smart routing: {routing_calls} routing operations")
+                elif routing_calls >= 3:
+                    score += 3
+                    findings.append(f"Good routing usage: {routing_calls} operations")
+                elif routing_calls >= 1:
+                    score += 1
+                    findings.append(f"Routing started: {routing_calls} operations")
+                    recommendations.append("Route more requests through Smart Router for cost savings")
+                else:
+                    findings.append("No smart routing detected")
+                    recommendations.append("Use Smart Router to optimize AI costs by 40-80%")
+
+                # Check actual savings data
+                try:
+                    cur.execute(
+                        """
+                        SELECT COUNT(*) AS cnt,
+                               COALESCE(SUM(savings), 0) AS total_savings
+                        FROM router_requests
+                        WHERE key_hash = %s
+                          AND routed_at >= NOW() - INTERVAL '30 days'
+                        """,
+                        (key_hash,),
+                    )
+                    row = cur.fetchone()
+                    requests = row["cnt"] if row else 0
+                    savings = float(row["total_savings"]) if row else 0
+
+                    if requests >= 5 and savings > 0:
+                        score += 2
+                        findings.append(f"Cost savings achieved: ${savings:.4f} across {requests} requests")
+                    elif requests >= 1:
+                        score += 1
+                        findings.append(f"Routing active: {requests} requests logged")
+                except Exception:
+                    pass
+
+                score = min(score, 6)
+
+    except Exception:
+        findings.append("Unable to assess smart routing")
+
+    return {"score": score, "max": 6, "findings": findings, "recommendations": recommendations}
 
 
 # ---------------------------------------------------------------------------
@@ -675,12 +744,13 @@ def register(mcp: FastMCP) -> None:
     @mcp.tool(
         name="thinkneo_evaluate_trust_score",
         description=(
-            "Evaluate your organization AI Trust Score (0-100) with detailed breakdown across 6 dimensions: governance, security, compliance, transparency, fairness, and reliability. Returns a public badge token that can be shared. Requires authentication."
-            "Measures governance maturity across 7 categories: Guardrails, PII Protection, "
-            "Injection Defense, Audit Trail, Compliance, Model Governance, and Cost Controls. "
+            "Evaluate your organization AI Trust Score (0-100) across 10 dimensions: "
+            "Guardrails, PII Protection, Injection Defense, Audit Trail, Compliance, "
+            "Model Governance, Cost Controls, Outcome Validation, Observability, and Smart Routing. "
             "Returns a score, detailed breakdown, badge level (Platinum/Gold/Silver/Bronze/Unrated), "
             "and actionable recommendations. Score is valid for 30 days. "
             "Generates a public badge URL for embedding in websites and documentation. "
+            "Part of the 'From Prompt to Proof' framework. "
             "Requires authentication."
         ),
         annotations=ToolAnnotations(readOnlyHint=False, idempotentHint=False),
@@ -693,7 +763,7 @@ def register(mcp: FastMCP) -> None:
         token = get_bearer_token()
         key_h = hash_key(token)
 
-        # Run all scoring categories
+        # Run all 10 scoring categories
         guardrails = _score_guardrails(key_h)
         pii = _score_pii_protection(key_h)
         injection = _score_injection_defense(key_h)
@@ -701,6 +771,9 @@ def register(mcp: FastMCP) -> None:
         compliance = _score_compliance(key_h)
         model_gov = _score_model_governance(key_h)
         cost = _score_cost_controls(key_h)
+        outcome = _score_outcome_validation(key_h)
+        observability = _score_observability(key_h)
+        routing = _score_smart_routing(key_h)
 
         # Calculate total
         total_score = (
@@ -711,6 +784,9 @@ def register(mcp: FastMCP) -> None:
             + compliance["score"]
             + model_gov["score"]
             + cost["score"]
+            + outcome["score"]
+            + observability["score"]
+            + routing["score"]
         )
         total_score = min(total_score, 100)
 
@@ -725,6 +801,9 @@ def register(mcp: FastMCP) -> None:
             "compliance": compliance,
             "model_governance": model_gov,
             "cost_controls": cost,
+            "outcome_validation": outcome,
+            "observability": observability,
+            "smart_routing": routing,
         }
 
         # Store in database
@@ -753,8 +832,8 @@ def register(mcp: FastMCP) -> None:
             "valid_until": (datetime.now(timezone.utc) + timedelta(days=30)).isoformat().replace("+00:00", "Z"),
             "evaluated_at": utcnow(),
             "note": (
-                "Score reflects governance tool usage over the last 30 days. "
-                "Increase your score by actively using ThinkNEO governance tools across all categories. "
+                "Score reflects governance tool usage and outcome verification over the last 30 days. "
+                "10 categories across the full 'From Prompt to Proof' framework. "
                 "Re-evaluate anytime to update your score."
             ),
             "trust_center": "https://thinkneo.ai/trust",

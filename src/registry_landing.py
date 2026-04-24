@@ -125,9 +125,9 @@ REGISTRY_HTML = """\
       ThinkNEO Marketplace is the distribution layer for the MCP ecosystem.
     </p>
     <div class="hero-stats">
-      <div class="stat"><div class="stat-num">Growing</div><div class="stat-label">Packages</div></div>
-      <div class="stat"><div class="stat-num">20</div><div class="stat-label">Tools</div></div>
-      <div class="stat"><div class="stat-num">10</div><div class="stat-label">Categories</div></div>
+      <div class="stat"><div class="stat-num" id="pkg-count">5</div><div class="stat-label">Packages</div></div>
+      <div class="stat"><div class="stat-num">20+</div><div class="stat-label">Tools</div></div>
+      <div class="stat"><div class="stat-num">4</div><div class="stat-label">Categories</div></div>
     </div>
   </div>
 

@@ -202,7 +202,7 @@ LANDING_HTML = """\
       <div class="logo-icon">N</div>
       <div class="logo-text">Think<span>NEO</span></div>
     </a>
-    <span class="badge">MCP Server v1.2.0 + Marketplace</span>
+    <span class="badge">MCP Server v1.1.0</span>
     <div class="header-links">
       <a href="https://thinkneo.ai">Website</a>
       <a href="https://github.com/thinkneo-ai/mcp-server">GitHub</a>
@@ -220,7 +220,7 @@ LANDING_HTML = """\
     </p>
     <div class="hero-badges">
       <div class="hero-badge green"><span class="status-dot"></span>Operational</div>
-      <div class="hero-badge blue">20 Tools</div>
+      <div class="hero-badge blue">12 Tools</div>
       <div class="hero-badge teal">500 Free Calls/mo</div>
     </div>
   </div>
@@ -300,66 +300,6 @@ LANDING_HTML = """\
     </div>
   </section>
 
-  <!-- Smart Router Section -->
-  <section>
-    <h2>AI Smart Router</h2>
-    <p style="color: var(--text2); margin-bottom: 20px;">
-      Route every AI call to the cheapest model that meets your quality threshold. Track savings automatically.
-    </p>
-    <div class="tool-grid">
-      <div class="tool-card">
-        <div class="tool-name">thinkneo_route_model</div>
-        <div class="tool-desc">Find the cheapest model meeting your quality threshold across 17+ models from 9 providers</div>
-        <span class="tool-tag auth">AUTH REQUIRED</span>
-      </div>
-      <div class="tool-card">
-        <div class="tool-name">thinkneo_get_savings_report</div>
-        <div class="tool-desc">View your AI cost savings: original vs actual cost, breakdown by task type and model</div>
-        <span class="tool-tag auth">AUTH REQUIRED</span>
-      </div>
-      <div class="tool-card">
-        <div class="tool-name">thinkneo_simulate_savings</div>
-        <div class="tool-desc">Simulate how much you'd save — enter your monthly spend and see the projected savings</div>
-        <span class="tool-tag free">FREE</span>
-      </div>
-    </div>
-  </section>
-
-  <!-- Marketplace Section -->
-  <section>
-    <h2>MCP Marketplace</h2>
-    <p style="color: var(--text2); margin-bottom: 20px;">
-      The npm for MCP tools. Discover, publish, and install MCP servers from one registry.
-    </p>
-    <div class="tool-grid">
-      <div class="tool-card">
-        <div class="tool-name">thinkneo_registry_search</div>
-        <div class="tool-desc">Search the marketplace — discover MCP servers by keyword, category, rating, or verified status</div>
-        <span class="tool-tag public">PUBLIC</span>
-      </div>
-      <div class="tool-card">
-        <div class="tool-name">thinkneo_registry_get</div>
-        <div class="tool-desc">Get full details: readme, tools list, versions, reviews, security score</div>
-        <span class="tool-tag public">PUBLIC</span>
-      </div>
-      <div class="tool-card">
-        <div class="tool-name">thinkneo_registry_publish</div>
-        <div class="tool-desc">Publish your MCP server — validates endpoint, runs security scan, stores entry</div>
-        <span class="tool-tag auth">AUTH REQUIRED</span>
-      </div>
-      <div class="tool-card">
-        <div class="tool-name">thinkneo_registry_review</div>
-        <div class="tool-desc">Rate and review MCP servers (1-5 stars, one review per user per package)</div>
-        <span class="tool-tag auth">AUTH REQUIRED</span>
-      </div>
-      <div class="tool-card">
-        <div class="tool-name">thinkneo_registry_install</div>
-        <div class="tool-desc">Get ready-to-use config JSON for Claude Desktop, Cursor, Windsurf, or custom clients</div>
-        <span class="tool-tag public">PUBLIC</span>
-      </div>
-    </div>
-  </section>
-
   <!-- Pricing Section -->
   <section>
     <h2>Pricing</h2>
@@ -369,7 +309,7 @@ LANDING_HTML = """\
         <div class="pricing-price">$0 <span>/month</span></div>
         <div class="pricing-calls">500 calls/month</div>
         <ul class="pricing-features">
-          <li>All 20 tools available</li>
+          <li>All 12 tools available</li>
           <li>Usage tracking & stats</li>
           <li>Prompt safety checks</li>
           <li>Auto-provisioned API key</li>
