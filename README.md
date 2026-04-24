@@ -397,6 +397,17 @@ Contact: [hello@thinkneo.ai](mailto:hello@thinkneo.ai)
 
 ---
 
+## Security & Compliance
+
+- **Vulnerability reporting**: [SECURITY.md](SECURITY.md) — security@thinkneo.ai, 48h response
+- **Threat model**: [THREAT_MODEL.md](THREAT_MODEL.md) — STRIDE analysis
+- **Compliance posture**: [docs/compliance/current.md](docs/compliance/current.md)
+- **Compliance roadmap**: [docs/compliance/roadmap.md](docs/compliance/roadmap.md) — SOC 2 Type I in progress
+- **Data handling**: [docs/compliance/data-handling.md](docs/compliance/data-handling.md)
+- **security.txt**: `/.well-known/security.txt` ([RFC 9116](https://www.rfc-editor.org/rfc/rfc9116))
+
+---
+
 ## License
 
 [MIT](LICENSE)
