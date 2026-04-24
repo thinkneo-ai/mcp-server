@@ -205,14 +205,14 @@ def register(mcp: FastMCP) -> None:
             "tier": "free",
             "note": (
                 "This is the free-tier safety check. "
-                "For more info visit: "
+                "Upgrade to Starter or Enterprise for advanced checks: "
                 "custom regex rules, ML-based injection detection, "
                 "HIPAA/SOC2 compliance scanning, and real-time alerts."
             ) if not safe else (
                 "No issues detected. For enterprise-grade safety with ML-based detection, "
                 "custom rules, and compliance scanning, see https://thinkneo.ai/pricing"
             ),
-            "docs_url": "https://mcp.thinkneo.ai/mcp/docs",
+            "upgrade_url": "https://thinkneo.ai/pricing",
             "checked_at": utcnow(),
         }
 

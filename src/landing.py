@@ -105,6 +105,26 @@ LANDING_HTML = """\
   .tool-tag.free { background: rgba(20, 180, 160, 0.12); color: var(--accent); }
 
   /* Pricing */
+  .pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  @media (max-width: 640px) { .pricing-grid { grid-template-columns: 1fr; } }
+  .pricing-card {
+    background: var(--bg3); border: 1px solid var(--border); border-radius: 12px; padding: 24px;
+    text-align: center; transition: border-color 0.2s, transform 0.2s;
+  }
+  .pricing-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .pricing-card.featured { border-color: var(--primary); position: relative; }
+  .pricing-card.featured::before {
+    content: "POPULAR"; position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
+    background: var(--primary); color: white; font-size: 11px; font-weight: 700;
+    padding: 2px 12px; border-radius: 10px;
+  }
+  .pricing-tier { font-size: 14px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 1px; }
+  .pricing-price { font-size: 32px; font-weight: 800; margin: 8px 0; }
+  .pricing-price span { font-size: 14px; color: var(--text2); font-weight: 400; }
+  .pricing-calls { font-size: 14px; color: var(--accent); font-weight: 600; margin-bottom: 16px; }
+  .pricing-features { list-style: none; text-align: left; font-size: 13px; color: var(--text2); }
+  .pricing-features li { padding: 4px 0; padding-left: 20px; position: relative; }
+  .pricing-features li::before { content: "\\2713"; position: absolute; left: 0; color: var(--success); font-weight: 700; }
 
   /* Code blocks */
   .code-tabs { display: flex; gap: 0; margin-bottom: 0; }
@@ -182,7 +202,7 @@ LANDING_HTML = """\
       <div class="logo-icon">N</div>
       <div class="logo-text">Think<span>NEO</span></div>
     </a>
-    <span class="badge">MCP Server v1.1.0</span>
+    <span class="badge">MCP Server v1.2.0 + Marketplace</span>
     <div class="header-links">
       <a href="https://thinkneo.ai">Website</a>
       <a href="https://github.com/thinkneo-ai/mcp-server">GitHub</a>
@@ -200,7 +220,7 @@ LANDING_HTML = """\
     </p>
     <div class="hero-badges">
       <div class="hero-badge green"><span class="status-dot"></span>Operational</div>
-      <div class="hero-badge blue">12 Tools</div>
+      <div class="hero-badge blue">20 Tools</div>
       <div class="hero-badge teal">500 Free Calls/mo</div>
     </div>
   </div>
@@ -280,21 +300,106 @@ LANDING_HTML = """\
     </div>
   </section>
 
-  <!-- Free for Developers -->
-  <section style="text-align:center;">
-    <h2 style="font-size:28px;font-weight:800;margin-bottom:8px;">Free for developers</h2>
-    <p style="color:var(--text-secondary);font-size:16px;margin-bottom:28px;">500 calls/month. All 12 tools. No credit card required.</p>
-    <div style="max-width:380px;margin:0 auto;background:var(--card-bg);border:1px solid var(--border);border-radius:14px;padding:36px;text-align:center;">
-      <div style="font-size:52px;font-weight:800;color:var(--text);margin-bottom:2px;">$0</div>
-      <div style="font-size:13px;color:var(--text-secondary);margin-bottom:24px;letter-spacing:1px;text-transform:uppercase;">forever free</div>
-      <ul style="list-style:none;text-align:left;font-size:14px;color:var(--text-secondary);margin-bottom:28px;padding:0;">
-        <li style="padding:7px 0;padding-left:26px;position:relative;"><span style="position:absolute;left:0;color:#10B981;font-weight:700;">&#x2713;</span> 12 AI governance tools</li>
-        <li style="padding:7px 0;padding-left:26px;position:relative;"><span style="position:absolute;left:0;color:#10B981;font-weight:700;">&#x2713;</span> 500 calls/month</li>
-        <li style="padding:7px 0;padding-left:26px;position:relative;"><span style="position:absolute;left:0;color:#10B981;font-weight:700;">&#x2713;</span> Prompt safety checks</li>
-        <li style="padding:7px 0;padding-left:26px;position:relative;"><span style="position:absolute;left:0;color:#10B981;font-weight:700;">&#x2713;</span> Usage dashboard</li>
-        <li style="padding:7px 0;padding-left:26px;position:relative;"><span style="position:absolute;left:0;color:#10B981;font-weight:700;">&#x2713;</span> Claude, ChatGPT, Cursor</li>
-      </ul>
-      <a href="/mcp/signup" class="btn btn-primary" style="display:block;text-align:center;padding:14px;border-radius:8px;font-size:15px;font-weight:700;">Get Free API Key</a>
+  <!-- Smart Router Section -->
+  <section>
+    <h2>AI Smart Router</h2>
+    <p style="color: var(--text2); margin-bottom: 20px;">
+      Route every AI call to the cheapest model that meets your quality threshold. Track savings automatically.
+    </p>
+    <div class="tool-grid">
+      <div class="tool-card">
+        <div class="tool-name">thinkneo_route_model</div>
+        <div class="tool-desc">Find the cheapest model meeting your quality threshold across 17+ models from 9 providers</div>
+        <span class="tool-tag auth">AUTH REQUIRED</span>
+      </div>
+      <div class="tool-card">
+        <div class="tool-name">thinkneo_get_savings_report</div>
+        <div class="tool-desc">View your AI cost savings: original vs actual cost, breakdown by task type and model</div>
+        <span class="tool-tag auth">AUTH REQUIRED</span>
+      </div>
+      <div class="tool-card">
+        <div class="tool-name">thinkneo_simulate_savings</div>
+        <div class="tool-desc">Simulate how much you'd save — enter your monthly spend and see the projected savings</div>
+        <span class="tool-tag free">FREE</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Marketplace Section -->
+  <section>
+    <h2>MCP Marketplace</h2>
+    <p style="color: var(--text2); margin-bottom: 20px;">
+      The npm for MCP tools. Discover, publish, and install MCP servers from one registry.
+    </p>
+    <div class="tool-grid">
+      <div class="tool-card">
+        <div class="tool-name">thinkneo_registry_search</div>
+        <div class="tool-desc">Search the marketplace — discover MCP servers by keyword, category, rating, or verified status</div>
+        <span class="tool-tag public">PUBLIC</span>
+      </div>
+      <div class="tool-card">
+        <div class="tool-name">thinkneo_registry_get</div>
+        <div class="tool-desc">Get full details: readme, tools list, versions, reviews, security score</div>
+        <span class="tool-tag public">PUBLIC</span>
+      </div>
+      <div class="tool-card">
+        <div class="tool-name">thinkneo_registry_publish</div>
+        <div class="tool-desc">Publish your MCP server — validates endpoint, runs security scan, stores entry</div>
+        <span class="tool-tag auth">AUTH REQUIRED</span>
+      </div>
+      <div class="tool-card">
+        <div class="tool-name">thinkneo_registry_review</div>
+        <div class="tool-desc">Rate and review MCP servers (1-5 stars, one review per user per package)</div>
+        <span class="tool-tag auth">AUTH REQUIRED</span>
+      </div>
+      <div class="tool-card">
+        <div class="tool-name">thinkneo_registry_install</div>
+        <div class="tool-desc">Get ready-to-use config JSON for Claude Desktop, Cursor, Windsurf, or custom clients</div>
+        <span class="tool-tag public">PUBLIC</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pricing Section -->
+  <section>
+    <h2>Pricing</h2>
+    <div class="pricing-grid">
+      <div class="pricing-card">
+        <div class="pricing-tier">Free</div>
+        <div class="pricing-price">$0 <span>/month</span></div>
+        <div class="pricing-calls">500 calls/month</div>
+        <ul class="pricing-features">
+          <li>All 20 tools available</li>
+          <li>Usage tracking & stats</li>
+          <li>Prompt safety checks</li>
+          <li>Auto-provisioned API key</li>
+          <li>Community support</li>
+        </ul>
+      </div>
+      <div class="pricing-card featured">
+        <div class="pricing-tier">Starter</div>
+        <div class="pricing-price">$29 <span>/month</span></div>
+        <div class="pricing-calls">5,000 calls/month</div>
+        <ul class="pricing-features">
+          <li>Everything in Free</li>
+          <li>Priority response times</li>
+          <li>Custom guardrail rules</li>
+          <li>Webhook integrations</li>
+          <li>Email support</li>
+        </ul>
+      </div>
+      <div class="pricing-card">
+        <div class="pricing-tier">Enterprise</div>
+        <div class="pricing-price">Custom</div>
+        <div class="pricing-calls">Unlimited calls</div>
+        <ul class="pricing-features">
+          <li>Everything in Starter</li>
+          <li>ML-based injection detection</li>
+          <li>SOC2/GDPR/HIPAA scanning</li>
+          <li>Custom SLA</li>
+          <li>Dedicated support</li>
+        </ul>
+      </div>
     </div>
   </section>
 
@@ -370,8 +475,8 @@ LANDING_HTML = """\
   <div class="cta">
     <h2>Start Building with ThinkNEO</h2>
     <p>500 free API calls per month. No credit card required.</p>
-    <a href="/mcp/signup" class="btn btn-primary">Get Free API Key</a>
-    <a href="https://thinkneo.ai/talk-sales" class="btn btn-outline">Book a Demo</a>
+    <a href="https://thinkneo.ai/pricing" class="btn btn-primary">Get Free API Key</a>
+    <a href="https://thinkneo.ai/demo" class="btn btn-outline">Book a Demo</a>
   </div>
 </div>
 
@@ -379,7 +484,7 @@ LANDING_HTML = """\
   <div class="container">
     <p>&copy; 2026 ThinkNEO. All rights reserved. |
     <a href="https://thinkneo.ai">thinkneo.ai</a> |
-    <a href="https://thinkneo.ai/terms-of-service">Trust Center</a> |
+    <a href="https://thinkneo.ai/trust">Trust Center</a> |
     <a href="mailto:hello@thinkneo.ai">hello@thinkneo.ai</a></p>
   </div>
 </footer>
