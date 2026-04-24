@@ -24,10 +24,7 @@ from starlette.routing import Route
 from .auth import BearerTokenMiddleware
 from .capabilities import register_prompts, register_resources
 from .config import get_settings
-from .agent_card import AgentCardMiddleware
-from .badge import BadgeMiddleware
 from .landing import LANDING_HTML
-from .registry_landing import REGISTRY_HTML
 from .tools import register_all
 
 # ---------------------------------------------------------------------------
@@ -70,15 +67,6 @@ mcp = FastMCP(
         "- thinkneo_route_model: AI Smart Router — find cheapest model for your task [auth required]\n"
         "- thinkneo_get_savings_report: View your AI cost savings report [auth required]\n"
         "- thinkneo_simulate_savings: Simulate how much you'd save — free lead gen tool [public]\n"
-        "- thinkneo_evaluate_trust_score: Get your AI Trust Score (0-100) with badge [auth required]\n"
-        "- thinkneo_get_trust_badge: Look up a public trust score badge by token [public]\n"
-        "\n"
-        "MCP Marketplace (Registry):\n"
-        "- thinkneo_registry_search: Search the MCP Marketplace — discover servers by keyword/category [public]\n"
-        "- thinkneo_registry_get: Get full details for an MCP server package [public]\n"
-        "- thinkneo_registry_publish: Publish your MCP server to the marketplace [auth required]\n"
-        "- thinkneo_registry_review: Rate and review an MCP server [auth required]\n"
-        "- thinkneo_registry_install: Get installation config for any MCP client [public]\n"
         "\n"
         "Free tier: 500 calls/month, auto-provisioned API key.\n"
         "For authenticated tools, users must supply a ThinkNEO API key as Bearer token.\n"
@@ -100,7 +88,7 @@ register_resources(mcp)
 
 logger.info(
     "ThinkNEO MCP Server configured: %d tools, 2 prompts, 2 resources, auth_required=%s",
-    26,  # 22 existing + 4 bridge tools
+    15,
     settings.require_auth,
 )
 
@@ -137,10 +125,6 @@ class LandingPageMiddleware:
                 response = HTMLResponse(LANDING_HTML, status_code=200)
                 await response(scope, receive, send)
                 return
-            if path in ("/registry", "/registry/") and method == "GET":
-                response = HTMLResponse(REGISTRY_HTML, status_code=200)
-                await response(scope, receive, send)
-                return
         await self.app(scope, receive, send)
 
 
@@ -148,18 +132,14 @@ class LandingPageMiddleware:
 # 1. MCP Starlette app (handles /mcp)
 # 2. Bearer token extraction
 # 3. Landing page (/mcp/docs)
-# 4. Badge
-# 5. Agent Card (/.well-known/agent.json)
-# 6. CORS (outermost)
+# 4. CORS (outermost)
 
 _mcp_with_auth = BearerTokenMiddleware(_mcp_starlette)
 _mcp_with_landing = LandingPageMiddleware(_mcp_with_auth)
-_mcp_with_badge = BadgeMiddleware(_mcp_with_landing)
-_mcp_with_agent_card = AgentCardMiddleware(_mcp_with_badge)
 
 # CORS — instantiate CORSMiddleware as a raw ASGI wrapper (preserves lifespan)
 app = CORSMiddleware(
-    app=_mcp_with_agent_card,
+    app=_mcp_with_landing,
     allow_origins=settings.allowed_origins or ["*"],
     allow_methods=["GET", "POST", "OPTIONS", "DELETE"],
     allow_headers=["*"],

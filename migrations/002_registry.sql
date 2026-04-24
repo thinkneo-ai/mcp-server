@@ -27,7 +27,6 @@ CREATE TABLE IF NOT EXISTS mcp_registry (
     stars           INTEGER NOT NULL DEFAULT 0,
     verified        BOOLEAN NOT NULL DEFAULT FALSE,
     security_score  INTEGER DEFAULT NULL,
-    owner_key_hash  TEXT DEFAULT '',
     created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     published_at    TIMESTAMPTZ DEFAULT NOW()

@@ -73,6 +73,23 @@ TOOL_COST_ESTIMATES = {
     "thinkneo_verify_claim": 0.005,
     "thinkneo_get_proof": 0.002,
     "thinkneo_verification_dashboard": 0.003,
+    # Policy Engine (2026-04-24)
+    "thinkneo_policy_create": 0.003,
+    "thinkneo_policy_list": 0.002,
+    "thinkneo_policy_evaluate": 0.004,
+    "thinkneo_policy_violations": 0.002,
+    # Outcome Benchmarking (2026-04-24)
+    "thinkneo_benchmark_report": 0.003,
+    "thinkneo_benchmark_compare": 0.003,
+    "thinkneo_router_explain": 0.003,
+    # Compliance Export (2026-04-24)
+    "thinkneo_compliance_generate": 0.005,
+    "thinkneo_compliance_list": 0.002,
+    # Agent SLA (2026-04-24)
+    "thinkneo_sla_define": 0.003,
+    "thinkneo_sla_status": 0.003,
+    "thinkneo_sla_breaches": 0.002,
+    "thinkneo_sla_dashboard": 0.003,
 }
 
 

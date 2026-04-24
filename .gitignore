@@ -9,3 +9,4 @@ dist/
 build/
 .DS_Store
 docker-compose.yml.bak
+src/free_tier.py.pre-obs

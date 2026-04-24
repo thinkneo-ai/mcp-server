@@ -1,0 +1,574 @@
+{
+  "protocolVersion": "0.3.0",
+  "name": "ThinkNEO Control Plane (MCP Bridge)",
+  "description": "Auto-generated A2A Agent Card for ThinkNEO Control Plane. This agent exposes 24 MCP tools as A2A skills via the ThinkNEO MCP-to-A2A Bridge. Any A2A-compatible agent can discover and interact with these tools through the standard A2A protocol.",
+  "url": "https://mcp.thinkneo.ai/a2a",
+  "preferredTransport": "JSONRPC",
+  "version": "1.0.0",
+  "supportedInterfaces": [
+    {
+      "url": "https://mcp.thinkneo.ai/a2a",
+      "protocolBinding": "jsonrpc",
+      "protocolVersion": "0.3.0"
+    }
+  ],
+  "provider": {
+    "organization": "ThinkNEO",
+    "url": "https://thinkneo.ai"
+  },
+  "capabilities": {
+    "streaming": false,
+    "pushNotifications": false,
+    "stateTransitionHistory": false
+  },
+  "authentication": {
+    "schemes": [
+      "bearer"
+    ]
+  },
+  "defaultInputModes": [
+    "text/plain",
+    "application/json"
+  ],
+  "defaultOutputModes": [
+    "text/plain",
+    "application/json"
+  ],
+  "skills": [
+    {
+      "id": "thinkneo_check",
+      "name": "Check",
+      "description": "Free prompt safety check \u2014 detects injection attempts and PII exposure in prompts before sending them to AI providers.",
+      "tags": [
+        "check",
+        "mcp-bridge",
+        "auto-generated"
+      ],
+      "examples": [
+        "Use thinkneo_check with prompt"
+      ],
+      "inputModes": [
+        "text/plain",
+        "application/json"
+      ],
+      "outputModes": [
+        "text/plain",
+        "application/json"
+      ]
+    },
+    {
+      "id": "thinkneo_usage",
+      "name": "Usage",
+      "description": "Check your ThinkNEO usage stats \u2014 calls today/week/month, limits, cost estimates, and top tools used.",
+      "tags": [
+        "usage",
+        "mcp-bridge",
+        "auto-generated"
+      ],
+      "examples": [
+        "Call thinkneo_usage"
+      ],
+      "inputModes": [
+        "text/plain",
+        "application/json"
+      ],
+      "outputModes": [
+        "text/plain",
+        "application/json"
+      ]
+    },
+    {
+      "id": "thinkneo_provider_status",
+      "name": "Provider Status",
+      "description": "Real-time health status of AI providers (OpenAI, Anthropic, Google, Mistral, etc.) monitored by ThinkNEO.",
+      "tags": [
+        "provider",
+        "status",
+        "mcp-bridge",
+        "auto-generated"
+      ],
+      "examples": [
+        "Call thinkneo_provider_status"
+      ],
+      "inputModes": [
+        "text/plain",
+        "application/json"
+      ],
+      "outputModes": [
+        "text/plain",
+        "application/json"
+      ]
+    },
+    {
+      "id": "thinkneo_schedule_demo",
+      "name": "Schedule Demo",
+      "description": "Book a demo with the ThinkNEO team. Collects contact info and schedules a walkthrough.",
+      "tags": [
+        "schedule",
+        "demo",
+        "mcp-bridge",
+        "auto-generated"
+      ],
+      "examples": [
+        "Use thinkneo_schedule_demo with name, email"
+      ],
+      "inputModes": [
+        "text/plain",
+        "application/json"
+      ],
+      "outputModes": [
+        "text/plain",
+        "application/json"
+      ]
+    },
+    {
+      "id": "thinkneo_read_memory",
+      "name": "Read Memory",
+      "description": "Read Claude Code project memory files \u2014 access project context, preferences, and reference notes.",
+      "tags": [
+        "read",
+        "memory",
+        "mcp-bridge",
+        "auto-generated"
+      ],
+      "examples": [
+        "Use thinkneo_read_memory with filename"
+      ],
+      "inputModes": [
+        "text/plain",
+        "application/json"
+      ],
+      "outputModes": [
+        "text/plain",
+        "application/json"
+      ]
+    },
+    {
+      "id": "thinkneo_write_memory",
+      "name": "Write Memory",
+      "description": "Write or update project memory files for persistent context across sessions.",
+      "tags": [
+        "write",
+        "memory",
+        "mcp-bridge",
+        "auto-generated"
+      ],
+      "examples": [
+        "Use thinkneo_write_memory with filename, content"
+      ],
+      "inputModes": [
+        "text/plain",
+        "application/json"
+      ],
+      "outputModes": [
+        "text/plain",
+        "application/json"
+      ]
+    },
+    {
+      "id": "thinkneo_check_spend",
+      "name": "Check Spend",
+      "description": "AI cost breakdown by provider, model, team, or project. Requires authentication.",
+      "tags": [
+        "check",
+        "spend",
+        "mcp-bridge",
+        "auto-generated"
+      ],
+      "examples": [
+        "Use thinkneo_check_spend with workspace, period"
+      ],
+      "inputModes": [
+        "text/plain",
+        "application/json"
+      ],
+      "outputModes": [
+        "text/plain",
+        "application/json"
+      ]
+    },
+    {
+      "id": "thinkneo_evaluate_guardrail",
+      "name": "Evaluate Guardrail",
+      "description": "Pre-flight prompt safety evaluation against workspace guardrail policies.",
+      "tags": [
+        "evaluate",
+        "guardrail",
+        "mcp-bridge",
+        "auto-generated"
+      ],
+      "examples": [
+        "Use thinkneo_evaluate_guardrail with workspace, prompt"
+      ],
+      "inputModes": [
+        "text/plain",
+        "application/json"
+      ],
+      "outputModes": [
+        "text/plain",
+        "application/json"
+      ]
+    },
+    {
+      "id": "thinkneo_check_policy",
+      "name": "Check Policy",
+      "description": "Verify if a model, provider, or action is allowed by workspace policy.",
+      "tags": [
+        "check",
+        "policy",
+        "mcp-bridge",
+        "auto-generated"
+      ],
+      "examples": [
+        "Use thinkneo_check_policy with workspace"
+      ],
+      "inputModes": [
+        "text/plain",
+        "application/json"
+      ],
+      "outputModes": [
+        "text/plain",
+        "application/json"
+      ]
+    },
+    {
+      "id": "thinkneo_get_budget_status",
+      "name": "Get Budget Status",
+      "description": "Budget utilization and enforcement status for a workspace.",
+      "tags": [
+        "get",
+        "budget",
+        "status",
+        "mcp-bridge",
+        "auto-generated"
+      ],
+      "examples": [
+        "Use thinkneo_get_budget_status with workspace"
+      ],
+      "inputModes": [
+        "text/plain",
+        "application/json"
+      ],
+      "outputModes": [
+        "text/plain",
+        "application/json"
+      ]
+    },
+    {
+      "id": "thinkneo_list_alerts",
+      "name": "List Alerts",
+      "description": "Active alerts and incidents for a workspace.",
+      "tags": [
+        "list",
+        "alerts",
+        "mcp-bridge",
+        "auto-generated"
+      ],
+      "examples": [
+        "Use thinkneo_list_alerts with workspace"
+      ],
+      "inputModes": [
+        "text/plain",
+        "application/json"
+      ],
+      "outputModes": [
+        "text/plain",
+        "application/json"
+      ]
+    },
+    {
+      "id": "thinkneo_get_compliance_status",
+      "name": "Get Compliance Status",
+      "description": "SOC2, GDPR, and HIPAA compliance readiness status for a workspace.",
+      "tags": [
+        "get",
+        "compliance",
+        "status",
+        "mcp-bridge",
+        "auto-generated"
+      ],
+      "examples": [
+        "Use thinkneo_get_compliance_status with workspace"
+      ],
+      "inputModes": [
+        "text/plain",
+        "application/json"
+      ],
+      "outputModes": [
+        "text/plain",
+        "application/json"
+      ]
+    },
+    {
+      "id": "thinkneo_detect_secrets",
+      "name": "Detect Secrets",
+      "description": "Scan text for leaked API keys, tokens, and credentials from 15+ providers.",
+      "tags": [
+        "detect",
+        "secrets",
+        "mcp-bridge",
+        "auto-generated"
+      ],
+      "examples": [
+        "Use thinkneo_detect_secrets with text"
+      ],
+      "inputModes": [
+        "text/plain",
+        "application/json"
+      ],
+      "outputModes": [
+        "text/plain",
+        "application/json"
+      ]
+    },
+    {
+      "id": "thinkneo_detect_injection",
+      "name": "Detect Injection",
+      "description": "Advanced prompt injection detection with multi-layer analysis.",
+      "tags": [
+        "detect",
+        "injection",
+        "mcp-bridge",
+        "auto-generated"
+      ],
+      "examples": [
+        "Use thinkneo_detect_injection with prompt"
+      ],
+      "inputModes": [
+        "text/plain",
+        "application/json"
+      ],
+      "outputModes": [
+        "text/plain",
+        "application/json"
+      ]
+    },
+    {
+      "id": "thinkneo_compare_models",
+      "name": "Compare Models",
+      "description": "Compare AI models across providers on cost, speed, quality, and context window.",
+      "tags": [
+        "compare",
+        "models",
+        "mcp-bridge",
+        "auto-generated"
+      ],
+      "examples": [
+        "Use thinkneo_compare_models with models"
+      ],
+      "inputModes": [
+        "text/plain",
+        "application/json"
+      ],
+      "outputModes": [
+        "text/plain",
+        "application/json"
+      ]
+    },
+    {
+      "id": "thinkneo_optimize_prompt",
+      "name": "Optimize Prompt",
+      "description": "Optimize prompts for cost, quality, and safety with provider-specific recommendations.",
+      "tags": [
+        "optimize",
+        "prompt",
+        "mcp-bridge",
+        "auto-generated"
+      ],
+      "examples": [
+        "Use thinkneo_optimize_prompt with prompt"
+      ],
+      "inputModes": [
+        "text/plain",
+        "application/json"
+      ],
+      "outputModes": [
+        "text/plain",
+        "application/json"
+      ]
+    },
+    {
+      "id": "thinkneo_count_tokens",
+      "name": "Count Tokens",
+      "description": "Count tokens for a prompt across multiple models and estimate costs.",
+      "tags": [
+        "count",
+        "tokens",
+        "mcp-bridge",
+        "auto-generated"
+      ],
+      "examples": [
+        "Use thinkneo_count_tokens with text"
+      ],
+      "inputModes": [
+        "text/plain",
+        "application/json"
+      ],
+      "outputModes": [
+        "text/plain",
+        "application/json"
+      ]
+    },
+    {
+      "id": "thinkneo_detect_pii",
+      "name": "Detect Pii",
+      "description": "Detect PII across 20+ international categories (GDPR, LGPD, PIPL, etc.).",
+      "tags": [
+        "detect",
+        "pii",
+        "mcp-bridge",
+        "auto-generated"
+      ],
+      "examples": [
+        "Use thinkneo_detect_pii with text"
+      ],
+      "inputModes": [
+        "text/plain",
+        "application/json"
+      ],
+      "outputModes": [
+        "text/plain",
+        "application/json"
+      ]
+    },
+    {
+      "id": "thinkneo_cache_prompt",
+      "name": "Cache Prompt",
+      "description": "Cache and retrieve prompt responses to reduce costs and latency.",
+      "tags": [
+        "cache",
+        "prompt",
+        "mcp-bridge",
+        "auto-generated"
+      ],
+      "examples": [
+        "Use thinkneo_cache_prompt with prompt"
+      ],
+      "inputModes": [
+        "text/plain",
+        "application/json"
+      ],
+      "outputModes": [
+        "text/plain",
+        "application/json"
+      ]
+    },
+    {
+      "id": "thinkneo_rotate_key",
+      "name": "Rotate Key",
+      "description": "Rotate an API key \u2014 generates a new key and revokes the old one.",
+      "tags": [
+        "rotate",
+        "key",
+        "mcp-bridge",
+        "auto-generated"
+      ],
+      "examples": [
+        "Call thinkneo_rotate_key"
+      ],
+      "inputModes": [
+        "text/plain",
+        "application/json"
+      ],
+      "outputModes": [
+        "text/plain",
+        "application/json"
+      ]
+    },
+    {
+      "id": "thinkneo_bridge_mcp_to_a2a",
+      "name": "Bridge Mcp To A2A",
+      "description": "Bridge an MCP tool call to an A2A agent \u2014 translates protocols bidirectionally.",
+      "tags": [
+        "bridge",
+        "mcp",
+        "to",
+        "a2a",
+        "mcp-bridge",
+        "auto-generated"
+      ],
+      "examples": [
+        "Use thinkneo_bridge_mcp_to_a2a with mcp_tool_name, arguments, target_a2a_agent_url"
+      ],
+      "inputModes": [
+        "text/plain",
+        "application/json"
+      ],
+      "outputModes": [
+        "text/plain",
+        "application/json"
+      ]
+    },
+    {
+      "id": "thinkneo_bridge_a2a_to_mcp",
+      "name": "Bridge A2A To Mcp",
+      "description": "Bridge an A2A task to an MCP server \u2014 translates protocols bidirectionally.",
+      "tags": [
+        "bridge",
+        "a2a",
+        "to",
+        "mcp",
+        "mcp-bridge",
+        "auto-generated"
+      ],
+      "examples": [
+        "Use thinkneo_bridge_a2a_to_mcp with a2a_task, target_mcp_server_url"
+      ],
+      "inputModes": [
+        "text/plain",
+        "application/json"
+      ],
+      "outputModes": [
+        "text/plain",
+        "application/json"
+      ]
+    },
+    {
+      "id": "thinkneo_bridge_generate_agent_card",
+      "name": "Bridge Generate Agent Card",
+      "description": "Auto-generate an A2A Agent Card from any MCP server tool list.",
+      "tags": [
+        "bridge",
+        "generate",
+        "agent",
+        "card",
+        "mcp-bridge",
+        "auto-generated"
+      ],
+      "examples": [
+        "Use thinkneo_bridge_generate_agent_card with mcp_server_url"
+      ],
+      "inputModes": [
+        "text/plain",
+        "application/json"
+      ],
+      "outputModes": [
+        "text/plain",
+        "application/json"
+      ]
+    },
+    {
+      "id": "thinkneo_bridge_list_mappings",
+      "name": "Bridge List Mappings",
+      "description": "List active MCP-A2A bridge mappings.",
+      "tags": [
+        "bridge",
+        "list",
+        "mappings",
+        "mcp-bridge",
+        "auto-generated"
+      ],
+      "examples": [
+        "Call thinkneo_bridge_list_mappings"
+      ],
+      "inputModes": [
+        "text/plain",
+        "application/json"
+      ],
+      "outputModes": [
+        "text/plain",
+        "application/json"
+      ]
+    }
+  ]
+}
