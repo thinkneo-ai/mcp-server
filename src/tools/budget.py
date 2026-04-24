@@ -13,7 +13,7 @@ from mcp.server.fastmcp import FastMCP
 from mcp.types import ToolAnnotations
 from pydantic import Field
 
-from ..plans import require_plan
+from ..auth import require_auth
 from ._common import demo_note, utcnow, validate_workspace
 
 
@@ -25,12 +25,12 @@ def register(mcp: FastMCP) -> None:
             "Shows spend vs limit, alert thresholds, and projected overage. "
             "Requires authentication."
         ),
-        annotations=ToolAnnotations(readOnlyHint=True),
+        annotations=ToolAnnotations(readOnlyHint=True, idempotentHint=True),
     )
     def thinkneo_get_budget_status(
         workspace: Annotated[str, Field(description="Workspace name or ID to retrieve current budget status for")],
     ) -> str:
-        require_plan("pro")
+        require_auth()
         workspace = validate_workspace(workspace)
 
         result = {

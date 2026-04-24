@@ -2,13 +2,13 @@
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-07-09/server.schema.json",
   "name": "ai.thinkneo/control-plane",
   "title": "ThinkNEO Control Plane",
-  "description": "ThinkNEO Control Plane \u2014 Enterprise AI governance with 22 tools. Secret scanning, prompt injection detection, international PII, model comparison, response caching, key rotation, and more.",
+  "description": "Enterprise AI governance MCP server with 46 tools: spend tracking, runtime guardrails, policy enforcement, budget management, compliance monitoring (SOC2/GDPR/HIPAA), AI Smart Router, MCP Marketplace registry, A2A Protocol bridge, agent observability, business value attribution, Trust Score, and Outcome Validation. Free tier: 500 calls/month.",
   "websiteUrl": "https://thinkneo.ai",
   "repository": {
     "url": "https://github.com/thinkneo-ai/mcp-server",
     "source": "github"
   },
-  "version": "2.0.0",
+  "version": "2.1.2",
   "license": "MIT",
   "remotes": [
     {

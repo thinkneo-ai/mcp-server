@@ -36,7 +36,7 @@ def register(mcp: FastMCP) -> None:
     @mcp.tool(
         name="thinkneo_bridge_mcp_to_a2a",
         description=(
-            "Bridge an MCP tool call to an A2A (Agent-to-Agent Protocol) agent. "
+            "Bridge an MCP tool call to an A2A (Agent-to-Agent Protocol) agent. Maps MCP tool name and parameters to the A2A task format, enabling interoperability between MCP servers and A2A agents. Returns a ready-to-send A2A task object with full protocol compliance. "
             "Translates the MCP tool_name and arguments into an A2A task, sends it "
             "to the target A2A agent, waits for completion, and translates the response "
             "back to MCP format. Use this to make any MCP tool accessible to A2A agents "
@@ -121,7 +121,7 @@ def register(mcp: FastMCP) -> None:
     @mcp.tool(
         name="thinkneo_bridge_a2a_to_mcp",
         description=(
-            "Bridge an A2A (Agent-to-Agent Protocol) task to an MCP server. "
+            "Bridge an A2A (Agent-to-Agent Protocol) task to an MCP server. Receives an A2A task, identifies the best matching MCP tool on the target server, executes it, and returns the result wrapped in A2A response format. Enables A2A agents to use any MCP server transparently. "
             "Extracts the intent from the A2A task, maps it to an MCP tool, "
             "calls the tool, and wraps the result in A2A response format. "
             "Use this to let A2A agents interact with any MCP server. "

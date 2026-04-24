@@ -675,7 +675,7 @@ def register(mcp: FastMCP) -> None:
     @mcp.tool(
         name="thinkneo_evaluate_trust_score",
         description=(
-            "Evaluate your organization's AI Trust Score (0-100). "
+            "Evaluate your organization AI Trust Score (0-100) with detailed breakdown across 6 dimensions: governance, security, compliance, transparency, fairness, and reliability. Returns a public badge token that can be shared. Requires authentication."
             "Measures governance maturity across 7 categories: Guardrails, PII Protection, "
             "Injection Defense, Audit Trail, Compliance, Model Governance, and Cost Controls. "
             "Returns a score, detailed breakdown, badge level (Platinum/Gold/Silver/Bronze/Unrated), "

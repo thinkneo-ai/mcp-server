@@ -118,7 +118,7 @@ def register(mcp: FastMCP) -> None:
     @mcp.tool(
         name="thinkneo_registry_publish",
         description=(
-            "Publish an MCP server to the ThinkNEO Marketplace. "
+            "Publish an MCP server to the ThinkNEO Marketplace. Validates the endpoint by calling initialize and tools/list, runs automated security scan for secrets and injection patterns, computes a security score (0-100), and stores the entry with version history. "
             "Validates the endpoint (calls initialize + tools/list), runs security scan "
             "(secrets detection, injection patterns), and stores the entry. "
             "Authentication required."
@@ -139,7 +139,6 @@ def register(mcp: FastMCP) -> None:
     ) -> str:
         # Auth check
         token = require_auth()
-        key_h = hash_key(token)
 
         result = publish_to_registry(
             name=name,
@@ -153,7 +152,6 @@ def register(mcp: FastMCP) -> None:
             license_=license,
             readme=readme[:50000],
             author=token[:8] + "...",  # Use key prefix as author identifier
-            owner_key_hash=key_h,
         )
 
         if "error" in result:
@@ -174,7 +172,7 @@ def register(mcp: FastMCP) -> None:
     @mcp.tool(
         name="thinkneo_registry_review",
         description=(
-            "Rate and review an MCP server in the ThinkNEO Marketplace. "
+            "Rate and review an MCP server in the ThinkNEO Marketplace. One review per user per package (updates on repeat). Rating from 1 (poor) to 5 (excellent) with optional comment. Reviews affect the package average rating shown in search results. "
             "One review per user per package (updates on repeat). "
             "Authentication required."
         ),
