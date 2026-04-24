@@ -2,12 +2,15 @@
 
 > Dual-protocol gateway: MCP tools + A2A Protocol agent in a single governed runtime
 
+[![Tests](https://github.com/thinkneo-ai/mcp-server/actions/workflows/tests.yml/badge.svg)](https://github.com/thinkneo-ai/mcp-server/actions/workflows/tests.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![MCP Protocol](https://img.shields.io/badge/MCP-2024--11--05-green.svg)](https://modelcontextprotocol.io)
 [![A2A Protocol](https://img.shields.io/badge/A2A-v0.3.0-blue.svg)](https://github.com/google/A2A)
-[![Tools](https://img.shields.io/badge/Tools-55-orange.svg)](#mcp-tools)
+[![Tools](https://img.shields.io/badge/Tools-59-orange.svg)](#mcp-tools)
 [![A2A Skills](https://img.shields.io/badge/A2A_Skills-24-blueviolet.svg)](#a2a-capabilities)
 [![TCK Compliance](https://img.shields.io/badge/TCK-97.6%25_(80%2F82)-brightgreen.svg)](TCK_REPORT.md)
+[![Tests: 286](https://img.shields.io/badge/Tests-286_passing-brightgreen.svg)](AUDIT_REPORT.md)
+[![Security](https://img.shields.io/badge/Security-0_HIGH-brightgreen.svg)](THREAT_MODEL.md)
 [![Free Tier](https://img.shields.io/badge/Free_Tier-500_calls%2Fmo-brightgreen.svg)](#self-signup)
 [![Glama](https://glama.ai/mcp/servers/ThinkneoAI/mcp-server/badge)](https://glama.ai/mcp/servers/ThinkneoAI/mcp-server)
 
