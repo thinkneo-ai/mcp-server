@@ -1,0 +1,85 @@
+# ThinkNEO MCP+A2A Gateway — Self-hosted deployment
+#
+# Start: docker compose up -d
+# Access: http://localhost:8081/mcp
+# Docs:   http://localhost:8081/mcp/docs
+#
+# Time to first request: < 2 minutes
+
+services:
+  gateway:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    image: thinkneo-mcp-server:latest
+    container_name: thinkneo-gateway
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    environment:
+      HOST: "0.0.0.0"
+      PORT: "8081"
+      LOG_LEVEL: "INFO"
+      WORKERS: "2"
+      # Auth — set your API keys
+      THINKNEO_API_KEY: "${THINKNEO_API_KEY:-}"
+      THINKNEO_MCP_API_KEYS: "${THINKNEO_MCP_API_KEYS:-}"
+      # Database
+      MCP_DB_HOST: "postgres"
+      MCP_DB_PORT: "5432"
+      MCP_DB_NAME: "thinkneo_mcp"
+      MCP_DB_USER: "mcp_user"
+      MCP_DB_PASSWORD: "${MCP_DB_PASSWORD:-thinkneo_local_dev}"
+      # CORS
+      ALLOWED_ORIGINS: "${ALLOWED_ORIGINS:-http://localhost:3000,https://claude.ai}"
+      # OpenTelemetry (optional)
+      OTEL_ENABLED: "${OTEL_ENABLED:-false}"
+      OTEL_SERVICE_NAME: "thinkneo-mcp-gateway"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "${OTEL_EXPORTER_OTLP_ENDPOINT:-http://otel-collector:4317}"
+      # Log redaction
+      LOG_REDACTION: "${LOG_REDACTION:-true}"
+    volumes:
+      - memory_data:/app/memory
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python3", "-c",
+        "import urllib.request; req = urllib.request.Request('http://127.0.0.1:8081/mcp', data=b'{\"jsonrpc\":\"2.0\",\"method\":\"initialize\",\"id\":1,\"params\":{\"protocolVersion\":\"2024-11-05\",\"capabilities\":{},\"clientInfo\":{\"name\":\"healthcheck\",\"version\":\"1.0\"}}}', headers={'Content-Type': 'application/json', 'Accept': 'application/json, text/event-stream'}, method='POST'); urllib.request.urlopen(req, timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      start_period: 15s
+      retries: 3
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: thinkneo-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: thinkneo_mcp
+      POSTGRES_USER: mcp_user
+      POSTGRES_PASSWORD: "${MCP_DB_PASSWORD:-thinkneo_local_dev}"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ../init_db.sql:/docker-entrypoint-initdb.d/01_init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mcp_user -d thinkneo_mcp"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Optional: OTEL Collector (uncomment to enable)
+  # otel-collector:
+  #   image: otel/opentelemetry-collector-contrib:latest
+  #   container_name: thinkneo-otel
+  #   command: ["--config=/etc/otelcol/config.yaml"]
+  #   volumes:
+  #     - ./otel-collector-config.yaml:/etc/otelcol/config.yaml:ro
+  #   ports:
+  #     - "4317:4317"   # gRPC
+  #     - "4318:4318"   # HTTP
+  #     - "8889:8889"   # Prometheus metrics
+
+volumes:
+  postgres_data:
+  memory_data:
