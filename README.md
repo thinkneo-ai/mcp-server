@@ -368,6 +368,21 @@ POST https://mcp.thinkneo.ai/mcp/signup
 
 No credit card required. All 55 tools available on the free tier.
 
+## Self-Hosted Deployment
+
+Run ThinkNEO gateway on your own infrastructure:
+
+```bash
+git clone https://github.com/thinkneo-ai/mcp-server.git
+cd mcp-server/deploy
+cp .env.example .env    # edit with your API key
+docker compose up -d    # gateway + PostgreSQL
+```
+
+Gateway at `http://localhost:8081/mcp`. See [self-hosted quickstart](docs/self-hosted/quickstart.md).
+
+---
+
 ## Enterprise Features
 
 - Per-minute rate limiting with configurable thresholds
