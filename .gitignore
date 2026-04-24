@@ -11,3 +11,4 @@ build/
 docker-compose.yml.bak
 src/free_tier.py.pre-obs
 .bandit-baseline.json
+audit_*.log
