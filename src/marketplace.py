@@ -11,11 +11,10 @@ from __future__ import annotations
 import json
 import logging
 import re
-from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
-
 import ipaddress
 from urllib.parse import urlparse
+from datetime import datetime, timezone
+from typing import Any, Dict, List, Optional
 
 import httpx
 import psycopg
@@ -111,6 +110,7 @@ def _compute_security_score(
     # (checked in the caller via endpoint_url)
 
     return max(0, score), findings
+
 
 
 # ── URL Safety ────────────────────────────────────────────────────────────────
@@ -412,7 +412,6 @@ def publish_to_registry(
     author: str = "",
     author_email: str = "",
     icon_url: str = "",
-    owner_key_hash: str = "",
 ) -> Dict[str, Any]:
     """
     Publish or update an MCP server in the registry.
@@ -451,16 +450,6 @@ def publish_to_registry(
     try:
         with _get_conn() as conn:
             with conn.cursor() as cur:
-                # Ownership check — if package exists, only the owner can update
-                if owner_key_hash:
-                    cur.execute(
-                        "SELECT owner_key_hash FROM mcp_registry WHERE name = %s",
-                        (name,),
-                    )
-                    existing = cur.fetchone()
-                    if existing and existing["owner_key_hash"] and existing["owner_key_hash"] != owner_key_hash:
-                        return {"error": f"Package '{name}' is owned by another user. You cannot overwrite it."}
-
                 # Upsert
                 cur.execute(
                     """
@@ -468,12 +457,12 @@ def publish_to_registry(
                         name, display_name, description, author, author_email,
                         version, endpoint_url, transport, tools_count, tools_list,
                         categories, tags, readme, icon_url, repo_url, license,
-                        verified, security_score, owner_key_hash, updated_at, published_at
+                        verified, security_score, updated_at, published_at
                     ) VALUES (
                         %s, %s, %s, %s, %s,
                         '1.0.0', %s, %s, %s, %s::jsonb,
                         %s, %s, %s, %s, %s, %s,
-                        FALSE, %s, %s, NOW(), NOW()
+                        FALSE, %s, NOW(), NOW()
                     )
                     ON CONFLICT (name) DO UPDATE SET
                         display_name = EXCLUDED.display_name,
@@ -498,7 +487,7 @@ def publish_to_registry(
                         name, display_name, description, author, author_email,
                         endpoint_url, transport, tools_count, json.dumps(tools_list),
                         cats, tags or [], readme or "", icon_url, repo_url, license_,
-                        security_score, owner_key_hash,
+                        security_score,
                     ),
                 )
                 row = cur.fetchone()

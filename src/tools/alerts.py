@@ -13,7 +13,7 @@ from mcp.server.fastmcp import FastMCP
 from mcp.types import ToolAnnotations
 from pydantic import Field
 
-from ..plans import require_plan
+from ..auth import require_auth
 from ._common import demo_note, utcnow, validate_workspace
 
 
@@ -25,14 +25,14 @@ def register(mcp: FastMCP) -> None:
             "Includes budget alerts, policy violations, guardrail triggers, "
             "and provider issues. Requires authentication."
         ),
-        annotations=ToolAnnotations(readOnlyHint=True),
+        annotations=ToolAnnotations(readOnlyHint=True, idempotentHint=True),
     )
     def thinkneo_list_alerts(
         workspace: Annotated[str, Field(description="Workspace name or ID to list active alerts for")],
         severity: Annotated[str, Field(description="Filter alerts by severity level: critical, warning, info, or all")] = "all",
         limit: Annotated[int, Field(description="Maximum number of alerts to return (1–100)", ge=1, le=100)] = 20,
     ) -> str:
-        require_plan("pro")
+        require_auth()
         workspace = validate_workspace(workspace)
 
         if severity not in ("critical", "warning", "info", "all"):
