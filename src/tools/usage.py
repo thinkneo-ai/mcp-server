@@ -51,10 +51,10 @@ def register(mcp: FastMCP) -> None:
                 },
                 "tiers": {
                     "free": {"calls": 500, "price": "Free"},
-
+                    "starter": {"calls": 5000, "price": "$29/mo"},
                     "enterprise": {"calls": "Unlimited", "price": "Custom"},
                 },
-                "docs": "https://mcp.thinkneo.ai/mcp/docs",
+                "get_started": "https://thinkneo.ai/pricing",
                 "fetched_at": utcnow(),
             }
             return json.dumps(result, indent=2)
@@ -70,7 +70,7 @@ def register(mcp: FastMCP) -> None:
             **stats,
             "tiers": {
                 "free": {"calls": 500, "price": "Free"},
-
+                "starter": {"calls": 5000, "price": "$29/mo"},
                 "enterprise": {"calls": "Unlimited", "price": "Custom"},
             },
             "fetched_at": utcnow(),

@@ -1,7 +1,7 @@
 """
 Database — PostgreSQL connection pool for the ThinkNEO MCP Server free-tier system.
 
-Uses psycopg (v3) with async connection pool.
+Uses psycopg (v3) with connection pool.
 Falls back gracefully if the database is unavailable (tools still work, just no usage tracking).
 """
 
@@ -10,9 +10,9 @@ from __future__ import annotations
 import hashlib
 import logging
 import os
-from contextlib import asynccontextmanager, contextmanager
+from contextlib import contextmanager
 from datetime import datetime, timezone
-from typing import Any, AsyncGenerator, Iterator, Optional
+from typing import Any, Generator, Optional
 
 import psycopg
 from psycopg.rows import dict_row
@@ -20,72 +20,61 @@ from psycopg_pool import ConnectionPool
 
 logger = logging.getLogger(__name__)
 
-# Connection parameters from environment — fail loud if password is missing
+# Connection parameters from environment
 _DB_HOST = os.getenv("MCP_DB_HOST", "172.17.0.1")
 _DB_PORT = int(os.getenv("MCP_DB_PORT", "5432"))
 _DB_NAME = os.getenv("MCP_DB_NAME", "thinkneo_mcp")
 _DB_USER = os.getenv("MCP_DB_USER", "mcp_user")
-_DB_PASSWORD = os.getenv("MCP_DB_PASSWORD")
+_DB_PASSWORD = os.getenv("MCP_DB_PASSWORD", "")
+
 if not _DB_PASSWORD:
-    raise RuntimeError("MCP_DB_PASSWORD environment variable must be set")
+    logger.warning("MCP_DB_PASSWORD not set — database features will be unavailable")
 
-# sslmode=prefer → attempts TLS but falls back if DB doesn't support it.
-# Our DB is on the Docker bridge (172.17.0.1) so plaintext is acceptable but
-# we still attempt encryption for defense in depth.
-_conninfo = (
-    f"host={_DB_HOST} port={_DB_PORT} dbname={_DB_NAME} "
-    f"user={_DB_USER} password={_DB_PASSWORD} "
-    f"sslmode=prefer connect_timeout=5"
-)
+_conninfo = f"host={_DB_HOST} port={_DB_PORT} dbname={_DB_NAME} user={_DB_USER} password={_DB_PASSWORD}"
 
-# Connection pool — min 2, max 10 connections. Idle timeout 5min.
-# Using pool eliminates TCP setup per query and prevents connection exhaustion.
+# Module-level connection pool — reuses connections across requests.
 _pool: Optional[ConnectionPool] = None
 
 
-def _get_pool() -> ConnectionPool:
-    """Lazy-init the connection pool on first use."""
+def _get_pool() -> Optional[ConnectionPool]:
+    """Lazily initialize the connection pool on first use."""
     global _pool
-    if _pool is None:
+    if _pool is not None:
+        return _pool
+    if not _DB_PASSWORD:
+        return None
+    try:
         _pool = ConnectionPool(
-            _conninfo,
-            min_size=2,
+            conninfo=_conninfo,
+            min_size=1,
             max_size=10,
-            max_idle=300,
-            timeout=10,
             kwargs={"row_factory": dict_row, "autocommit": True},
             open=True,
         )
-        logger.info("PostgreSQL connection pool initialized (min=2, max=10)")
-    return _pool
+        logger.info("PostgreSQL connection pool initialized (max_size=10)")
+        return _pool
+    except Exception as exc:
+        logger.warning("Failed to create connection pool: %s", exc)
+        return None
 
 
 @contextmanager
-def _get_conn() -> Iterator[psycopg.Connection]:
-    """Get a pooled connection. Returns it to the pool on context exit."""
+def _get_conn() -> Generator[psycopg.Connection, None, None]:
+    """Get a connection from the pool. Falls back to direct connection if pool unavailable."""
     pool = _get_pool()
-    with pool.connection() as conn:
-        yield conn
+    if pool:
+        with pool.connection() as conn:
+            yield conn
+    else:
+        # Fallback: direct connection (e.g. pool init failed)
+        with psycopg.connect(_conninfo, row_factory=dict_row, autocommit=True) as conn:
+            yield conn
 
 
 def hash_key(api_key: str) -> str:
     """SHA-256 hash of an API key for storage."""
     return hashlib.sha256(api_key.encode("utf-8")).hexdigest()
 
-
-
-
-def is_key_revoked(api_key: str) -> bool:
-    """Check if an API key has been revoked."""
-    key_h = hash_key(api_key)
-    try:
-        with _get_conn() as conn:
-            with conn.cursor() as cur:
-                cur.execute("SELECT 1 FROM revoked_keys WHERE key_hash = %s", (key_h,))
-                return cur.fetchone() is not None
-    except Exception as exc:
-        logger.warning("DB is_key_revoked failed: %s", exc)
-        return False
 
 def ensure_api_key(api_key: str, email: Optional[str] = None) -> dict[str, Any]:
     """
@@ -94,11 +83,6 @@ def ensure_api_key(api_key: str, email: Optional[str] = None) -> dict[str, Any]:
     """
     key_h = hash_key(api_key)
     key_prefix = api_key[:8]
-
-    # Check if key has been revoked
-    if is_key_revoked(api_key):
-        logger.warning("Revoked API key attempted: %s...", key_prefix)
-        return {"key_hash": key_h, "tier": "revoked", "monthly_limit": 0}
 
     try:
         with _get_conn() as conn:
@@ -111,8 +95,8 @@ def ensure_api_key(api_key: str, email: Optional[str] = None) -> dict[str, Any]:
                 # Auto-register as free tier
                 cur.execute(
                     """
-                    INSERT INTO api_keys (key_hash, key_prefix, email, tier, monthly_limit, plan)
-                    VALUES (%s, %s, %s, 'free', 500, 'free')
+                    INSERT INTO api_keys (key_hash, key_prefix, email, tier, monthly_limit)
+                    VALUES (%s, %s, %s, 'free', 500)
                     ON CONFLICT (key_hash) DO NOTHING
                     RETURNING *
                     """,
@@ -126,10 +110,10 @@ def ensure_api_key(api_key: str, email: Optional[str] = None) -> dict[str, Any]:
                 # Race condition — re-fetch
                 cur.execute("SELECT * FROM api_keys WHERE key_hash = %s", (key_h,))
                 row = cur.fetchone()
-                return dict(row) if row else {"key_hash": key_h, "tier": "free", "plan": "free", "monthly_limit": 500}
+                return dict(row) if row else {"key_hash": key_h, "tier": "free", "monthly_limit": 500}
     except Exception as exc:
         logger.warning("DB ensure_api_key failed: %s", exc)
-        return {"key_hash": key_h, "tier": "free", "plan": "free", "monthly_limit": 500}
+        return {"key_hash": key_h, "tier": "free", "monthly_limit": 500}
 
 
 def get_monthly_usage(key_hash: str) -> int:
@@ -246,7 +230,7 @@ def get_usage_stats(key_hash: str) -> dict[str, Any]:
                     "top_tools": top_tools,
                     "estimated_cost_usd": float(month["cost"]) if month else 0.0,
                     "tier": tier,
-                    "docs_url": "https://mcp.thinkneo.ai/mcp/docs",
+                    "upgrade_url": "https://thinkneo.ai/pricing",
                 }
     except Exception as exc:
         logger.warning("DB get_usage_stats failed: %s", exc)
@@ -259,7 +243,7 @@ def get_usage_stats(key_hash: str) -> dict[str, Any]:
             "top_tools": [],
             "estimated_cost_usd": 0.0,
             "tier": "free",
-            "docs_url": "https://mcp.thinkneo.ai/mcp/docs",
+            "upgrade_url": "https://thinkneo.ai/pricing",
             "_note": "Usage stats temporarily unavailable",
         }
 

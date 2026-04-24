@@ -1,0 +1,52 @@
+{
+  "name": "@thinkneo/sdk",
+  "version": "0.1.0",
+  "description": "TypeScript/JavaScript SDK for the ThinkNEO MCP Server — Enterprise AI Control Plane",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc && tsc --module esnext --outDir dist/esm",
+    "prepublishOnly": "npm run build",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "thinkneo",
+    "mcp",
+    "ai-governance",
+    "guardrails",
+    "finops",
+    "prompt-injection",
+    "pii-detection",
+    "model-context-protocol"
+  ],
+  "author": "ThinkNEO <hello@thinkneo.ai>",
+  "license": "MIT",
+  "homepage": "https://thinkneo.ai",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/thinkneo-ai/mcp-server"
+  },
+  "bugs": {
+    "url": "https://github.com/thinkneo-ai/mcp-server/issues"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0"
+  }
+}

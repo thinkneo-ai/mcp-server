@@ -15,6 +15,7 @@ from mcp.server.fastmcp import FastMCP
 from mcp.types import ToolAnnotations
 from pydantic import Field
 
+from ..auth import require_auth
 from ._common import utcnow
 
 _MEMORY_DIR = Path("/app/memory")
@@ -53,6 +54,9 @@ def register(mcp: FastMCP) -> None:
             ),
         ],
     ) -> str:
+        # Require authentication — writing memory files is a privileged operation
+        require_auth()
+
         if not _MEMORY_DIR.is_dir():
             return json.dumps(
                 {

@@ -1,4 +1,5 @@
 # Tool modules — each module registers its tool(s) via register(mcp) call.
+import functools
 import json
 import logging
 
@@ -13,24 +14,32 @@ from .scheduling import register as register_scheduling
 from .memory import register as register_memory
 from .spend import register as register_spend
 from .usage import register as register_usage
+from .registry import register as register_registry
 from .write_memory import register as register_write_memory
-
-# New tools (2026-04-16)
-from .secrets import register as register_secrets
-from .injection import register as register_injection
-from .compare_models import register as register_compare_models
-from .optimize_prompt import register as register_optimize_prompt
-from .tokens import register as register_tokens
-from .pii_intl import register as register_pii_intl
-from .cache import register as register_cache
-from .rotate_key import register as register_rotate_key
+from .router_route import register as register_router_route
+from .router_savings import register as register_router_savings
+from .router_simulate import register as register_router_simulate
+from .trust_score import register as register_trust_score
+from .bridge import register as register_bridge
+from .observability import register as register_observability
+from .value_baseline import register as register_value_baseline
+from .value_log_decision import register as register_value_log_decision
+from .value_log_risk import register as register_value_log_risk
+from .value_decision_cost import register as register_value_decision_cost
+from .value_agent_roi import register as register_value_agent_roi
+from .value_business_impact import register as register_value_business_impact
+from .a2a_log import register as register_a2a_log
+from .a2a_policy import register as register_a2a_policy
+from .a2a_flow import register as register_a2a_flow
+from .a2a_audit import register as register_a2a_audit
+from .value_waste_detector import register as register_waste_detector
+from .outcome_validation import register as register_outcome_validation
 
 logger = logging.getLogger(__name__)
 
 
 def register_all(mcp) -> None:
     """Register all ThinkNEO tools on the given FastMCP instance."""
-    # Existing tools
     register_spend(mcp)
     register_memory(mcp)
     register_write_memory(mcp)
@@ -43,18 +52,36 @@ def register_all(mcp) -> None:
     register_providers(mcp)
     register_scheduling(mcp)
     register_usage(mcp)
+    register_router_route(mcp)
+    register_router_savings(mcp)
+    register_router_simulate(mcp)
+    register_trust_score(mcp)
+    register_registry(mcp)
 
-    # New free tools
-    register_secrets(mcp)
-    register_injection(mcp)
-    register_compare_models(mcp)
-    register_optimize_prompt(mcp)
-    register_tokens(mcp)
-    register_pii_intl(mcp)
+    # MCP <-> A2A Bridge tools
+    register_bridge(mcp)
+    # Agent Observability tools (2026-04-18)
+    register_observability(mcp)
 
-    # New paid/caching tools
-    register_cache(mcp)
-    register_rotate_key(mcp)
+    # Business Value Attribution tools (2026-04-23)
+    register_value_baseline(mcp)
+    register_value_log_decision(mcp)
+    register_value_log_risk(mcp)
+    register_value_decision_cost(mcp)
+    register_value_agent_roi(mcp)
+    register_value_business_impact(mcp)
+
+    # A2A Control Layer tools (2026-04-23)
+    register_a2a_log(mcp)
+    register_a2a_policy(mcp)
+    register_a2a_flow(mcp)
+    register_a2a_audit(mcp)
+
+    # Optimization & Waste Detection (2026-04-23)
+    register_waste_detector(mcp)
+
+    # Outcome Validation Loop — "From Prompt to Proof" (2026-04-24)
+    register_outcome_validation(mcp)
 
     # After all tools are registered, wrap each tool's function
     # to integrate free-tier checking and usage footer injection.
@@ -71,27 +98,34 @@ def _wrap_tools_with_free_tier(mcp) -> None:
     """
     from ..free_tier import check_free_tier, get_usage_footer
 
-    # Access the internal tool registry
-    # FastMCP stores tools in _tool_manager._tools (dict[name, Tool])
+    # Access the internal tool registry.
+    # FastMCP stores tools in _tool_manager._tools (dict[name, Tool]).
+    # NOTE: This accesses private API — pin mcp[cli] version in requirements.txt.
     try:
         tool_manager = mcp._tool_manager
         tools = tool_manager._tools
     except AttributeError:
-        logger.warning("Could not access FastMCP tool registry for free-tier wrapping")
+        logger.warning(
+            "Could not access FastMCP tool registry for free-tier wrapping. "
+            "This likely means the mcp library version changed its internal API. "
+            "Pin mcp version in requirements.txt to avoid this."
+        )
         return
 
     for tool_name, tool_obj in tools.items():
         original_fn = tool_obj.fn
 
-        # Create a sync wrapper that preserves the original function's signature
+        # Create a wrapper that preserves the original function's full signature
+        # using functools.wraps so inspect.signature() follows __wrapped__.
         def make_wrapper(orig_fn, tname):
+            @functools.wraps(orig_fn)
             def wrapped(*args, **kwargs):
                 # 1. Check free tier limits
                 block_msg = check_free_tier(tname)
                 if block_msg:
                     return block_msg
 
-                # 2. Call original function (sync)
+                # 2. Call original function
                 result = orig_fn(*args, **kwargs)
 
                 # 3. Append usage footer to JSON responses
@@ -107,15 +141,6 @@ def _wrap_tools_with_free_tier(mcp) -> None:
 
                 return result
 
-            # Preserve function metadata for FastMCP
-            wrapped.__name__ = orig_fn.__name__
-            wrapped.__doc__ = orig_fn.__doc__
-            wrapped.__module__ = getattr(orig_fn, '__module__', __name__)
-            # Copy annotations for parameter detection
-            if hasattr(orig_fn, '__annotations__'):
-                wrapped.__annotations__ = orig_fn.__annotations__
-            if hasattr(orig_fn, '__wrapped__'):
-                wrapped.__wrapped__ = orig_fn.__wrapped__
             return wrapped
 
         tool_obj.fn = make_wrapper(original_fn, tool_name)

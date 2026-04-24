@@ -22,11 +22,12 @@ from starlette.responses import HTMLResponse, Response
 from starlette.routing import Route
 
 from .auth import BearerTokenMiddleware
-from .oauth import OAuthMiddleware
-from .signup import SignupMiddleware
 from .capabilities import register_prompts, register_resources
 from .config import get_settings
+from .agent_card import AgentCardMiddleware
+from .badge import BadgeMiddleware
 from .landing import LANDING_HTML
+from .registry_landing import REGISTRY_HTML
 from .tools import register_all
 
 # ---------------------------------------------------------------------------
@@ -55,7 +56,7 @@ mcp = FastMCP(
         "\n\n"
         "Available tools:\n"
         "- thinkneo_read_memory: Read Claude Code project memory files (index or specific file) [public]\n"
-        "- thinkneo_write_memory: Write/update project memory files [public]\n"
+        "- thinkneo_write_memory: Write/update project memory files [auth required]\n"
         "- thinkneo_check: Free prompt safety check — detects injection & PII [free]\n"
         "- thinkneo_usage: Your usage stats — calls, limits, cost [free]\n"
         "- thinkneo_check_spend: AI cost breakdown by provider/model/team [auth required]\n"
@@ -66,6 +67,18 @@ mcp = FastMCP(
         "- thinkneo_get_compliance_status: SOC2/GDPR/HIPAA readiness [auth required]\n"
         "- thinkneo_provider_status: Real-time provider health [public]\n"
         "- thinkneo_schedule_demo: Book a demo with the ThinkNEO team [public]\n"
+        "- thinkneo_route_model: AI Smart Router — find cheapest model for your task [auth required]\n"
+        "- thinkneo_get_savings_report: View your AI cost savings report [auth required]\n"
+        "- thinkneo_simulate_savings: Simulate how much you'd save — free lead gen tool [public]\n"
+        "- thinkneo_evaluate_trust_score: Get your AI Trust Score (0-100) with badge [auth required]\n"
+        "- thinkneo_get_trust_badge: Look up a public trust score badge by token [public]\n"
+        "\n"
+        "MCP Marketplace (Registry):\n"
+        "- thinkneo_registry_search: Search the MCP Marketplace — discover servers by keyword/category [public]\n"
+        "- thinkneo_registry_get: Get full details for an MCP server package [public]\n"
+        "- thinkneo_registry_publish: Publish your MCP server to the marketplace [auth required]\n"
+        "- thinkneo_registry_review: Rate and review an MCP server [auth required]\n"
+        "- thinkneo_registry_install: Get installation config for any MCP client [public]\n"
         "\n"
         "Free tier: 500 calls/month, auto-provisioned API key.\n"
         "For authenticated tools, users must supply a ThinkNEO API key as Bearer token.\n"
@@ -87,7 +100,7 @@ register_resources(mcp)
 
 logger.info(
     "ThinkNEO MCP Server configured: %d tools, 2 prompts, 2 resources, auth_required=%s",
-    12,
+    42,
     settings.require_auth,
 )
 
@@ -124,43 +137,34 @@ class LandingPageMiddleware:
                 response = HTMLResponse(LANDING_HTML, status_code=200)
                 await response(scope, receive, send)
                 return
+            if path in ("/registry", "/registry/") and method == "GET":
+                response = HTMLResponse(REGISTRY_HTML, status_code=200)
+                await response(scope, receive, send)
+                return
         await self.app(scope, receive, send)
 
 
 # Stack middleware layers (innermost first):
 # 1. MCP Starlette app (handles /mcp)
-# 2. Bearer token extraction (also resolves OAuth access tokens → API keys)
+# 2. Bearer token extraction
 # 3. Landing page (/mcp/docs)
-# 4. Signup (/mcp/signup)
-# 5. OAuth (/.well-known/*, /oauth/*)
+# 4. Badge
+# 5. Agent Card (/.well-known/agent.json)
 # 6. CORS (outermost)
 
 _mcp_with_auth = BearerTokenMiddleware(_mcp_starlette)
 _mcp_with_landing = LandingPageMiddleware(_mcp_with_auth)
-_mcp_with_signup = SignupMiddleware(_mcp_with_landing)
-_mcp_with_oauth = OAuthMiddleware(_mcp_with_signup)
+_mcp_with_badge = BadgeMiddleware(_mcp_with_landing)
+_mcp_with_agent_card = AgentCardMiddleware(_mcp_with_badge)
 
-# CORS — explicit allowlist only (never "*" with credentials, per CORS spec).
-# Missing ALLOWED_ORIGINS env var now defaults to an empty list, blocking
-# unconfigured cross-origin access instead of silently opening it to the world.
-_cors_origins = settings.allowed_origins  # list from env, or empty list
+# CORS — instantiate CORSMiddleware as a raw ASGI wrapper (preserves lifespan)
 app = CORSMiddleware(
-    app=_mcp_with_oauth,
-    allow_origins=_cors_origins,
+    app=_mcp_with_agent_card,
+    allow_origins=settings.allowed_origins or ["*"],
     allow_methods=["GET", "POST", "OPTIONS", "DELETE"],
-    allow_headers=[
-        "Authorization",
-        "Content-Type",
-        "Accept",
-        "Mcp-Session-Id",
-        "Mcp-Protocol-Version",
-        "X-Requested-With",
-    ],
+    allow_headers=["*"],
     allow_credentials=True,
-    max_age=600,
 )
-if not _cors_origins:
-    logger.warning("ALLOWED_ORIGINS is empty — cross-origin browser requests will be rejected.")
 
 
 # ---------------------------------------------------------------------------

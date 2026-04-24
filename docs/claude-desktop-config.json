@@ -1,0 +1,12 @@
+{
+  "_comment": "ThinkNEO MCP Server — Claude Desktop configuration. Copy this into ~/.claude/claude_desktop_config.json (macOS/Linux) or %APPDATA%\\Claude\\claude_desktop_config.json (Windows). Replace <YOUR_API_KEY> with your ThinkNEO API key from https://thinkneo.ai/app/signup/",
+
+  "mcpServers": {
+    "thinkneo": {
+      "url": "https://mcp.thinkneo.ai/mcp",
+      "headers": {
+        "Authorization": "Bearer <YOUR_API_KEY>"
+      }
+    }
+  }
+}
