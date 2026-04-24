@@ -28,6 +28,7 @@ from .agent_card import AgentCardMiddleware
 from .badge import BadgeMiddleware
 from .otel import setup_otel
 from .middleware.otel_middleware import OTELMiddleware
+from .middleware.rate_limit import RateLimitMiddleware
 from .landing import LANDING_HTML
 from .registry_landing import REGISTRY_HTML
 from .tools import register_all
@@ -161,7 +162,8 @@ _mcp_with_auth = BearerTokenMiddleware(_mcp_starlette)
 _mcp_with_landing = LandingPageMiddleware(_mcp_with_auth)
 _mcp_with_badge = BadgeMiddleware(_mcp_with_landing)
 _mcp_with_agent_card = AgentCardMiddleware(_mcp_with_badge)
-_mcp_with_otel = OTELMiddleware(_mcp_with_agent_card)
+_mcp_with_ratelimit = RateLimitMiddleware(_mcp_with_agent_card)
+_mcp_with_otel = OTELMiddleware(_mcp_with_ratelimit)
 
 # CORS — instantiate CORSMiddleware as a raw ASGI wrapper (preserves lifespan)
 app = CORSMiddleware(

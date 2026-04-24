@@ -314,6 +314,20 @@ curl -X POST https://agent.thinkneo.ai/a2a \
 
 ---
 
+## Rate Limits
+
+Multi-dimensional rate limiting per API key with standard HTTP headers.
+
+| Tier | Burst/second | Per minute | Monthly |
+|------|-------------|------------|---------|
+| Free | 10 | 60 | 500 |
+| Starter/Pro | 100 | 600 | 5,000 |
+| Enterprise | 1,000 | 6,000 | Unlimited |
+
+Every response includes `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset`. Exceeded limits return `429` with `Retry-After`. See [docs/features/rate-limiting.md](docs/features/rate-limiting.md).
+
+---
+
 ## Observability Integrations
 
 Native OpenTelemetry support — traces and metrics for every MCP tool call and A2A skill invocation.
