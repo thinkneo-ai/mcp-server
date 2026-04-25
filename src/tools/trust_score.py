@@ -37,7 +37,7 @@ from mcp.types import ToolAnnotations
 from pydantic import Field
 
 from ..auth import get_bearer_token, require_auth
-from ..database import _get_conn, hash_key, ensure_api_key
+from ..database import _get_conn, hash_key
 from ._common import utcnow
 
 # ---------------------------------------------------------------------------
