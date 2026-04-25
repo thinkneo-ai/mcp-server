@@ -1,3 +1,4 @@
+import os
 """
 Functional test: every A2A skill individually.
 
@@ -10,7 +11,7 @@ import urllib.request
 import pytest
 
 A2A_URL = "https://agent.thinkneo.ai/a2a"
-AUTH = "Bearer 374ed89eb7a288e274371019780a56d7d7f57022f48aa76773d97c130a49e7fe"
+AUTH = "Bearer " + os.environ.get("THINKNEO_TEST_API_KEY", "test-key-not-set")
 
 
 def _a2a_task(skill_prompt: str, task_id: str = None) -> dict:

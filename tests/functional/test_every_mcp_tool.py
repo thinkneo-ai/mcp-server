@@ -1,3 +1,4 @@
+import os
 """
 Functional test: every MCP tool individually.
 
@@ -196,7 +197,7 @@ def test_thinkneo_start_trace(all_tools, authenticated, mock_db, mock_cursor):
     req = urllib.request.Request(
         "https://mcp.thinkneo.ai/mcp",
         data=json.dumps({"jsonrpc":"2.0","method":"tools/call","id":1,"params":{"name":"thinkneo_start_trace","arguments":{"agent_name":"func-test"}}}).encode(),
-        headers={"Content-Type":"application/json","Accept":"application/json, text/event-stream","Authorization":"Bearer 374ed89eb7a288e274371019780a56d7d7f57022f48aa76773d97c130a49e7fe"},
+        headers={"Content-Type":"application/json","Accept":"application/json, text/event-stream","Authorization":"Bearer " + os.environ.get("THINKNEO_TEST_API_KEY", "test-key-not-set")},
     )
     resp = urllib.request.urlopen(req, timeout=15)
     raw = resp.read().decode()
@@ -213,7 +214,7 @@ def test_thinkneo_log_event(all_tools, authenticated, mock_db, mock_cursor):
     # First create a trace
     req = urllib.request.Request("https://mcp.thinkneo.ai/mcp",
         data=json.dumps({"jsonrpc":"2.0","method":"tools/call","id":1,"params":{"name":"thinkneo_start_trace","arguments":{"agent_name":"func-test-event"}}}).encode(),
-        headers={"Content-Type":"application/json","Accept":"application/json, text/event-stream","Authorization":"Bearer 374ed89eb7a288e274371019780a56d7d7f57022f48aa76773d97c130a49e7fe"})
+        headers={"Content-Type":"application/json","Accept":"application/json, text/event-stream","Authorization":"Bearer " + os.environ.get("THINKNEO_TEST_API_KEY", "test-key-not-set")})
     resp = urllib.request.urlopen(req, timeout=15)
     raw = resp.read().decode()
     session_id = None
@@ -228,7 +229,7 @@ def test_thinkneo_log_event(all_tools, authenticated, mock_db, mock_cursor):
     # Now log event
     req2 = urllib.request.Request("https://mcp.thinkneo.ai/mcp",
         data=json.dumps({"jsonrpc":"2.0","method":"tools/call","id":2,"params":{"name":"thinkneo_log_event","arguments":{"session_id":session_id,"event_type":"tool_call"}}}).encode(),
-        headers={"Content-Type":"application/json","Accept":"application/json, text/event-stream","Authorization":"Bearer 374ed89eb7a288e274371019780a56d7d7f57022f48aa76773d97c130a49e7fe"})
+        headers={"Content-Type":"application/json","Accept":"application/json, text/event-stream","Authorization":"Bearer " + os.environ.get("THINKNEO_TEST_API_KEY", "test-key-not-set")})
     resp2 = urllib.request.urlopen(req2, timeout=15)
     raw2 = resp2.read().decode()
     for line in raw2.split("\n"):
@@ -242,7 +243,7 @@ def test_thinkneo_end_trace(all_tools, authenticated, mock_db, mock_cursor):
     import urllib.request, json
     req = urllib.request.Request("https://mcp.thinkneo.ai/mcp",
         data=json.dumps({"jsonrpc":"2.0","method":"tools/call","id":1,"params":{"name":"thinkneo_start_trace","arguments":{"agent_name":"func-test-end"}}}).encode(),
-        headers={"Content-Type":"application/json","Accept":"application/json, text/event-stream","Authorization":"Bearer 374ed89eb7a288e274371019780a56d7d7f57022f48aa76773d97c130a49e7fe"})
+        headers={"Content-Type":"application/json","Accept":"application/json, text/event-stream","Authorization":"Bearer " + os.environ.get("THINKNEO_TEST_API_KEY", "test-key-not-set")})
     resp = urllib.request.urlopen(req, timeout=15)
     raw = resp.read().decode()
     session_id = None
@@ -254,7 +255,7 @@ def test_thinkneo_end_trace(all_tools, authenticated, mock_db, mock_cursor):
     assert session_id
     req2 = urllib.request.Request("https://mcp.thinkneo.ai/mcp",
         data=json.dumps({"jsonrpc":"2.0","method":"tools/call","id":2,"params":{"name":"thinkneo_end_trace","arguments":{"session_id":session_id}}}).encode(),
-        headers={"Content-Type":"application/json","Accept":"application/json, text/event-stream","Authorization":"Bearer 374ed89eb7a288e274371019780a56d7d7f57022f48aa76773d97c130a49e7fe"})
+        headers={"Content-Type":"application/json","Accept":"application/json, text/event-stream","Authorization":"Bearer " + os.environ.get("THINKNEO_TEST_API_KEY", "test-key-not-set")})
     resp2 = urllib.request.urlopen(req2, timeout=15)
     for line in resp2.read().decode().split("\n"):
         if line.startswith("data: "):
@@ -266,13 +267,13 @@ def test_thinkneo_get_trace(all_tools, authenticated, mock_db, mock_cursor):
     import urllib.request, json
     req = urllib.request.Request("https://mcp.thinkneo.ai/mcp",
         data=json.dumps({"jsonrpc":"2.0","method":"tools/call","id":1,"params":{"name":"thinkneo_start_trace","arguments":{"agent_name":"func-test-gettrace"}}}).encode(),
-        headers={"Content-Type":"application/json","Accept":"application/json, text/event-stream","Authorization":"Bearer 374ed89eb7a288e274371019780a56d7d7f57022f48aa76773d97c130a49e7fe"})
+        headers={"Content-Type":"application/json","Accept":"application/json, text/event-stream","Authorization":"Bearer " + os.environ.get("THINKNEO_TEST_API_KEY", "test-key-not-set")})
     inner = json.loads(json.loads(urllib.request.urlopen(req, timeout=15).read().decode().split("data: ")[1].split("\n")[0]).get("result",{}).get("content",[{}])[0].get("text","{}"))
     sid = inner.get("session_id")
     assert sid
     req2 = urllib.request.Request("https://mcp.thinkneo.ai/mcp",
         data=json.dumps({"jsonrpc":"2.0","method":"tools/call","id":2,"params":{"name":"thinkneo_get_trace","arguments":{"session_id":sid}}}).encode(),
-        headers={"Content-Type":"application/json","Accept":"application/json, text/event-stream","Authorization":"Bearer 374ed89eb7a288e274371019780a56d7d7f57022f48aa76773d97c130a49e7fe"})
+        headers={"Content-Type":"application/json","Accept":"application/json, text/event-stream","Authorization":"Bearer " + os.environ.get("THINKNEO_TEST_API_KEY", "test-key-not-set")})
     for line in urllib.request.urlopen(req2, timeout=15).read().decode().split("\n"):
         if line.startswith("data: "):
             assert json.loads(line[6:])["result"].get("isError") is not True
@@ -283,7 +284,7 @@ def test_thinkneo_get_observability_dashboard(all_tools, authenticated, mock_db,
     import urllib.request, json
     req = urllib.request.Request("https://mcp.thinkneo.ai/mcp",
         data=json.dumps({"jsonrpc":"2.0","method":"tools/call","id":1,"params":{"name":"thinkneo_get_observability_dashboard","arguments":{}}}).encode(),
-        headers={"Content-Type":"application/json","Accept":"application/json, text/event-stream","Authorization":"Bearer 374ed89eb7a288e274371019780a56d7d7f57022f48aa76773d97c130a49e7fe"})
+        headers={"Content-Type":"application/json","Accept":"application/json, text/event-stream","Authorization":"Bearer " + os.environ.get("THINKNEO_TEST_API_KEY", "test-key-not-set")})
     for line in urllib.request.urlopen(req, timeout=15).read().decode().split("\n"):
         if line.startswith("data: "):
             assert json.loads(line[6:])["result"].get("isError") is not True
@@ -338,7 +339,7 @@ def _call_prod(tool_name, args):
     req = urllib.request.Request("https://mcp.thinkneo.ai/mcp",
         data=json.dumps({"jsonrpc":"2.0","method":"tools/call","id":1,"params":{"name":tool_name,"arguments":args}}).encode(),
         headers={"Content-Type":"application/json","Accept":"application/json, text/event-stream",
-                 "Authorization":"Bearer 374ed89eb7a288e274371019780a56d7d7f57022f48aa76773d97c130a49e7fe"})
+                 "Authorization":"Bearer " + os.environ.get("THINKNEO_TEST_API_KEY", "test-key-not-set")})
     raw = urllib.request.urlopen(req, timeout=15).read().decode()
     for line in raw.split("\n"):
         if line.startswith("data: "):
