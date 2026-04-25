@@ -12,7 +12,7 @@ from mcp.server.fastmcp import FastMCP
 from mcp.types import ToolAnnotations
 
 from ..auth import get_bearer_token
-from ..database import get_usage_stats, hash_key, ensure_api_key
+from ..database import get_usage_stats, hash_key, _get_conn
 from ._common import utcnow
 
 
@@ -59,9 +59,8 @@ def register(mcp: FastMCP) -> None:
             }
             return json.dumps(result, indent=2)
 
-        # Authenticated — get real stats
+        # Authenticated — get real stats (NO auto-registration, SEC-01)
         key_h = hash_key(token)
-        key_info = ensure_api_key(token)
         stats = get_usage_stats(key_h)
 
         result = {
