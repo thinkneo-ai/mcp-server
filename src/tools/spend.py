@@ -25,7 +25,7 @@ def register(mcp: FastMCP) -> None:
             "Returns cost breakdown by provider, model, and time period. "
             "Requires authentication."
         ),
-        annotations=ToolAnnotations(readOnlyHint=True, idempotentHint=True),
+        annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False),
     )
     def thinkneo_check_spend(
         workspace: Annotated[str, Field(description="Workspace name or ID (e.g., 'prod-engineering', 'finance-team')")],

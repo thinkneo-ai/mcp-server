@@ -29,7 +29,7 @@ def register(mcp: FastMCP) -> None:
             "Use this to access project context, user preferences, feedback, and reference notes "
             "persisted across Claude Code sessions."
         ),
-        annotations=ToolAnnotations(readOnlyHint=True, idempotentHint=True),
+        annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False),
     )
     def thinkneo_read_memory(
         filename: Annotated[

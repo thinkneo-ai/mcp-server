@@ -45,7 +45,7 @@ def register(mcp: FastMCP) -> None:
             "save cost and latency. Namespaced to prevent collisions across workspaces. "
             "Free tier: shared cache. Enterprise: private + semantic similarity matching."
         ),
-        annotations=ToolAnnotations(readOnlyHint=True, idempotentHint=True),
+        annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False),
     )
     def thinkneo_cache_lookup(
         prompt: Annotated[str, Field(description="The prompt text (exact match lookup)")],
@@ -104,7 +104,7 @@ def register(mcp: FastMCP) -> None:
             "(default 24h). Upsert: replaces existing entries. "
             "Use this AFTER calling an LLM provider to cache the response for future calls."
         ),
-        annotations=ToolAnnotations(readOnlyHint=False, idempotentHint=True),
+        annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=True, idempotentHint=True, openWorldHint=False),
     )
     def thinkneo_cache_store(
         prompt: Annotated[str, Field(description="The prompt text")],
@@ -162,7 +162,7 @@ def register(mcp: FastMCP) -> None:
             "Get cache performance stats for a namespace. Shows hit rate, entries, "
             "estimated savings. Use to optimize caching strategy."
         ),
-        annotations=ToolAnnotations(readOnlyHint=True, idempotentHint=True),
+        annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False),
     )
     def thinkneo_cache_stats(
         namespace: Annotated[str, Field(description="Cache namespace")] = "default",

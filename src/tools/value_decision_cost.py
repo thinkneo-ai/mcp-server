@@ -26,7 +26,7 @@ def register(mcp: FastMCP) -> None:
             "compared to the pre-AI baseline. Answers: 'How much does each AI decision cost?' "
             "and 'How does it compare to doing it without AI?'"
         ),
-        annotations=ToolAnnotations(readOnlyHint=True, idempotentHint=True),
+        annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False),
     )
     def thinkneo_decision_cost(
         workspace: Annotated[str, Field(description="Workspace identifier")] = "default",

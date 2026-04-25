@@ -25,7 +25,7 @@ def register(mcp: FastMCP) -> None:
             "Includes budget alerts, policy violations, guardrail triggers, "
             "and provider issues. Requires authentication."
         ),
-        annotations=ToolAnnotations(readOnlyHint=True, idempotentHint=True),
+        annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False),
     )
     def thinkneo_list_alerts(
         workspace: Annotated[str, Field(description="Workspace name or ID to list active alerts for")],

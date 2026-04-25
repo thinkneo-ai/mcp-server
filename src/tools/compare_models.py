@@ -169,7 +169,7 @@ def register(mcp: FastMCP) -> None:
             "multilingual, EU compliant, real-time, open source). "
             "No authentication required."
         ),
-        annotations=ToolAnnotations(readOnlyHint=True, idempotentHint=True),
+        annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False),
     )
     def thinkneo_compare_models(
         use_case: Annotated[Optional[str], Field(description="Filter by use case: coding, reasoning, writing, vision, long context, cheap, agentic, multilingual, EU compliant, real-time, open source")] = None,

@@ -25,7 +25,7 @@ def register(mcp: FastMCP) -> None:
             "remaining calls, top tools used, estimated cost, and current tier. "
             "Works without authentication (returns general info)."
         ),
-        annotations=ToolAnnotations(readOnlyHint=True, idempotentHint=True),
+        annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False),
     )
     def thinkneo_usage() -> str:
         token = get_bearer_token()

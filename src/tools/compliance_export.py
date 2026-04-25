@@ -32,7 +32,7 @@ def register(mcp: FastMCP) -> None:
             "'iso_42001' (ISO 42001 AI Management), 'eu_ai_act' (EU AI Act). "
             "Returns SHA-256 signed, tamper-evident report. Requires authentication."
         ),
-        annotations=ToolAnnotations(readOnlyHint=False, idempotentHint=False),
+        annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=True, idempotentHint=False, openWorldHint=False),
     )
     def thinkneo_compliance_generate(
         framework: Annotated[str, Field(
@@ -54,7 +54,7 @@ def register(mcp: FastMCP) -> None:
             "List previously generated compliance reports. Shows framework, period, "
             "compliance score, and download URL for each report. Requires authentication."
         ),
-        annotations=ToolAnnotations(readOnlyHint=True, idempotentHint=True),
+        annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False),
     )
     def thinkneo_compliance_list(
         limit: Annotated[int, Field(description="Max reports to return (default 20)")] = 20,

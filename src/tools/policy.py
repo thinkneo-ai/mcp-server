@@ -29,7 +29,7 @@ def register(mcp: FastMCP) -> None:
             "governance policies configured for a workspace. "
             "Requires authentication."
         ),
-        annotations=ToolAnnotations(readOnlyHint=True, idempotentHint=True),
+        annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False),
     )
     def thinkneo_check_policy(
         workspace: Annotated[str, Field(description="Workspace name or ID whose governance policies to check against")],

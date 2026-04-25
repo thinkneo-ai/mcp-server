@@ -27,7 +27,7 @@ def register(mcp: FastMCP) -> None:
             "cost per decision, top performing agents, and risk event summary. "
             "This is the report a CxO needs to justify AI investment."
         ),
-        annotations=ToolAnnotations(readOnlyHint=True, idempotentHint=True),
+        annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False),
     )
     def thinkneo_business_impact(
         workspace: Annotated[str, Field(description="Workspace identifier")] = "default",

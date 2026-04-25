@@ -156,7 +156,7 @@ def register(mcp: FastMCP) -> None:
             "Required for LGPD/GDPR/HIPAA compliance. "
             "No authentication required."
         ),
-        annotations=ToolAnnotations(readOnlyHint=True, idempotentHint=True),
+        annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False),
     )
     def thinkneo_check_pii_international(
         text: Annotated[str, Field(description="Text to scan for PII (max 100,000 chars)")],

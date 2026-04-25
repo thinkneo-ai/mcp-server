@@ -33,7 +33,7 @@ def register(mcp: FastMCP) -> None:
             "Supports 17+ models across Anthropic, OpenAI, Google, Meta, Mistral, DeepSeek, "
             "Alibaba, Cohere, and xAI. Requires authentication."
         ),
-        annotations=ToolAnnotations(readOnlyHint=True, idempotentHint=True),
+        annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False),
     )
     def thinkneo_route_model(
         task_type: Annotated[str, Field(
