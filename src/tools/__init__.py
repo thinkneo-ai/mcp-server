@@ -37,6 +37,7 @@ from .outcome_validation import register as register_outcome_validation
 from .policy_engine import register as register_policy_engine
 from .benchmarking import register as register_benchmarking
 from .compliance_export import register as register_compliance_export
+from .audit_export import register as register_audit_export
 from .agent_sla import register as register_agent_sla
 
 logger = logging.getLogger(__name__)
@@ -98,6 +99,9 @@ def register_all(mcp) -> None:
 
     # Agent SLA — Outcome Service Level Agreements (2026-04-24)
     register_agent_sla(mcp)
+
+    # SIEM Audit Export — CEF, LEEF, syslog, JSON, CSV (2026-04-25)
+    register_audit_export(mcp)
 
     # After all tools are registered, wrap each tool's function
     # to integrate free-tier checking and usage footer injection.
