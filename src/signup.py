@@ -133,7 +133,7 @@ def _create_key_in_db(api_key: str, email: str) -> bool:
                     """INSERT INTO api_keys (key_hash, key_prefix, email, tier, monthly_limit)
                        VALUES (%s, %s, %s, 'free', 500)
                        ON CONFLICT (key_hash) DO NOTHING""",
-                    (key_hash, api_key[:12], email),
+                    (key_hash, api_key[:8], email),
                 )
                 conn.commit()
                 return True
