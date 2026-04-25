@@ -1,8 +1,12 @@
 """
-Database — PostgreSQL connection pool for the ThinkNEO MCP Server free-tier system.
+Database — PostgreSQL connection pool for the ThinkNEO MCP Server.
 
-Uses psycopg (v3) with async connection pool.
-Falls back gracefully if the database is unavailable (tools still work, just no usage tracking).
+Uses psycopg_pool.ConnectionPool for efficient connection reuse.
+Falls back gracefully if the database is unavailable.
+
+Migration note (SEC-06): Replaced per-query _get_conn() (new connection
+each call) with a pool. _get_conn() now returns a pool-managed context
+manager — existing `with _get_conn() as conn:` callers work unchanged.
 """
 
 from __future__ import annotations
@@ -10,12 +14,12 @@ from __future__ import annotations
 import hashlib
 import logging
 import os
-from contextlib import asynccontextmanager
-from datetime import datetime, timezone
-from typing import Any, AsyncGenerator, Optional
+import threading
+from typing import Any, Optional
 
 import psycopg
 from psycopg.rows import dict_row
+from psycopg_pool import ConnectionPool
 
 logger = logging.getLogger(__name__)
 
@@ -28,14 +32,85 @@ _DB_PASSWORD = os.getenv("MCP_DB_PASSWORD", "")
 
 _conninfo = f"host={_DB_HOST} port={_DB_PORT} dbname={_DB_NAME} user={_DB_USER} password={_DB_PASSWORD}"
 
-# Module-level connection — we use a simple connection per query (sync)
-# since MCP tool calls are already serialized per request.
+# ---------------------------------------------------------------------------
+# Connection Pool (lazy singleton)
+# ---------------------------------------------------------------------------
+
+_pool: Optional[ConnectionPool] = None
+_pool_lock = threading.Lock()
 
 
-def _get_conn() -> psycopg.Connection:
-    """Get a new sync connection to PostgreSQL."""
-    return psycopg.connect(_conninfo, row_factory=dict_row, autocommit=True)
+def _get_pool() -> ConnectionPool:
+    """Lazy-init the global connection pool."""
+    global _pool
+    if _pool is not None:
+        return _pool
+    with _pool_lock:
+        if _pool is not None:
+            return _pool
+        _pool = ConnectionPool(
+            conninfo=_conninfo,
+            min_size=2,
+            max_size=20,
+            kwargs={"row_factory": dict_row, "autocommit": True},
+            timeout=30.0,
+            max_idle=300.0,
+            max_lifetime=1800.0,
+            num_workers=1,
+        )
+        logger.info(
+            "Connection pool initialized: min=%d max=%d host=%s db=%s",
+            2, 20, _DB_HOST, _DB_NAME,
+        )
+        return _pool
 
+
+def _get_conn():
+    """Get a pooled connection context manager.
+
+    Usage (unchanged from before):
+        with _get_conn() as conn:
+            with conn.cursor() as cur:
+                cur.execute(...)
+
+    The connection is automatically returned to the pool when the
+    ``with`` block exits (instead of being closed).
+    """
+    return _get_pool().connection()
+
+
+def get_pool_stats() -> dict[str, Any]:
+    """Return current pool metrics for monitoring."""
+    try:
+        pool = _get_pool()
+        stats = pool.get_stats()
+        return {
+            "pool_size": stats.get("pool_size", 0),
+            "pool_available": stats.get("pool_available", 0),
+            "requests_waiting": stats.get("requests_waiting", 0),
+            "requests_num": stats.get("requests_num", 0),
+            "requests_errors": stats.get("requests_errors", 0),
+            "connections_num": stats.get("connections_num", 0),
+        }
+    except Exception:
+        return {"error": "pool not initialized"}
+
+
+def close_pool() -> None:
+    """Drain and close the connection pool. Called on shutdown."""
+    global _pool
+    if _pool is not None:
+        try:
+            _pool.close()
+        except Exception:
+            pass
+        _pool = None
+        logger.info("Connection pool closed")
+
+
+# ---------------------------------------------------------------------------
+# Public helpers (unchanged API)
+# ---------------------------------------------------------------------------
 
 def hash_key(api_key: str) -> str:
     """SHA-256 hash of an API key for storage."""
@@ -58,7 +133,6 @@ def ensure_api_key(api_key: str, email: Optional[str] = None) -> dict[str, Any]:
                 if row:
                     return dict(row)
 
-                # Auto-register as free tier
                 cur.execute(
                     """
                     INSERT INTO api_keys (key_hash, key_prefix, email, tier, monthly_limit)
@@ -73,7 +147,6 @@ def ensure_api_key(api_key: str, email: Optional[str] = None) -> dict[str, Any]:
                     logger.info("Auto-registered free-tier API key: %s...", key_prefix)
                     return dict(row)
 
-                # Race condition — re-fetch
                 cur.execute("SELECT * FROM api_keys WHERE key_hash = %s", (key_h,))
                 row = cur.fetchone()
                 return dict(row) if row else {"key_hash": key_h, "tier": "free", "monthly_limit": 500}
@@ -132,54 +205,35 @@ def get_usage_stats(key_hash: str) -> dict[str, Any]:
     try:
         with _get_conn() as conn:
             with conn.cursor() as cur:
-                # Calls today
                 cur.execute(
-                    """
-                    SELECT COUNT(*) as cnt, COALESCE(SUM(cost_estimate_usd), 0) as cost
-                    FROM usage_log
-                    WHERE key_hash = %s AND called_at >= date_trunc('day', NOW())
-                    """,
+                    "SELECT COUNT(*) as cnt, COALESCE(SUM(cost_estimate_usd), 0) as cost "
+                    "FROM usage_log WHERE key_hash = %s AND called_at >= date_trunc('day', NOW())",
                     (key_hash,),
                 )
                 today = cur.fetchone()
 
-                # Calls this week
                 cur.execute(
-                    """
-                    SELECT COUNT(*) as cnt, COALESCE(SUM(cost_estimate_usd), 0) as cost
-                    FROM usage_log
-                    WHERE key_hash = %s AND called_at >= date_trunc('week', NOW())
-                    """,
+                    "SELECT COUNT(*) as cnt, COALESCE(SUM(cost_estimate_usd), 0) as cost "
+                    "FROM usage_log WHERE key_hash = %s AND called_at >= date_trunc('week', NOW())",
                     (key_hash,),
                 )
                 week = cur.fetchone()
 
-                # Calls this month
                 cur.execute(
-                    """
-                    SELECT COUNT(*) as cnt, COALESCE(SUM(cost_estimate_usd), 0) as cost
-                    FROM usage_log
-                    WHERE key_hash = %s AND called_at >= date_trunc('month', NOW())
-                    """,
+                    "SELECT COUNT(*) as cnt, COALESCE(SUM(cost_estimate_usd), 0) as cost "
+                    "FROM usage_log WHERE key_hash = %s AND called_at >= date_trunc('month', NOW())",
                     (key_hash,),
                 )
                 month = cur.fetchone()
 
-                # Top tools this month
                 cur.execute(
-                    """
-                    SELECT tool_name, COUNT(*) as cnt
-                    FROM usage_log
-                    WHERE key_hash = %s AND called_at >= date_trunc('month', NOW())
-                    GROUP BY tool_name
-                    ORDER BY cnt DESC
-                    LIMIT 10
-                    """,
+                    "SELECT tool_name, COUNT(*) as cnt FROM usage_log "
+                    "WHERE key_hash = %s AND called_at >= date_trunc('month', NOW()) "
+                    "GROUP BY tool_name ORDER BY cnt DESC LIMIT 10",
                     (key_hash,),
                 )
                 top_tools = [{"tool": r["tool_name"], "count": r["cnt"]} for r in cur.fetchall()]
 
-                # Get key info
                 cur.execute("SELECT * FROM api_keys WHERE key_hash = %s", (key_hash,))
                 key_info = cur.fetchone()
 

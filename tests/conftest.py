@@ -21,6 +21,12 @@ import pytest
 # Ensure src/ is importable
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+# Prevent ConnectionPool from opening real connections during tests.
+# Must happen before any src.database import.
+import src.database as _db_mod
+_db_mod._pool = MagicMock()  # prevent lazy init from starting real pool threads
+_db_mod._pool.connection.return_value = MagicMock()
+
 
 # ---------------------------------------------------------------------------
 # Database mock
