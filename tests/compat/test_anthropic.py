@@ -57,8 +57,12 @@ def test_chat_completion(api_key, model):
     log_latency(model, "chat", latency)
 
 
+@pytest.mark.skipif(
+    not __import__("os").environ.get("TEST_OPUS", ""),
+    reason="Opus requires premium API tier — set TEST_OPUS=1 to enable"
+)
 def test_chat_opus(api_key):
-    """Opus — single call, expensive."""
+    """Opus — single call, expensive. Skipped unless TEST_OPUS=1."""
     data, latency = _chat(api_key, OPUS_MODEL)
     validate_chat_response(data, "anthropic")
     log_latency(OPUS_MODEL, "chat", latency)
