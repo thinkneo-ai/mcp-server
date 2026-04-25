@@ -116,7 +116,7 @@ class TestRateLimitMiddleware:
             await middleware({"type": "lifespan"}, MagicMock(), MagicMock())
             assert len(called) == 1
 
-        asyncio.get_event_loop().run_until_complete(run())
+        asyncio.run(run())
 
     def test_passes_through_without_token(self):
         """Requests without bearer token pass through without headers."""
@@ -136,4 +136,4 @@ class TestRateLimitMiddleware:
                 )
             assert len(called) == 1
 
-        asyncio.get_event_loop().run_until_complete(run())
+        asyncio.run(run())

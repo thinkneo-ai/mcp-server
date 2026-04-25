@@ -110,7 +110,7 @@ class TestOTELMiddleware:
             await middleware(scope, MagicMock(), MagicMock())
             assert len(called) == 1
 
-        asyncio.get_event_loop().run_until_complete(run())
+        asyncio.run(run())
 
     def test_passes_through_when_otel_disabled(self):
         """HTTP requests should pass through without spans when OTEL disabled."""
@@ -130,7 +130,7 @@ class TestOTELMiddleware:
                 await middleware(scope, MagicMock(), MagicMock())
             assert len(called) == 1
 
-        asyncio.get_event_loop().run_until_complete(run())
+        asyncio.run(run())
 
 
 class TestToolWrapperOTEL:
