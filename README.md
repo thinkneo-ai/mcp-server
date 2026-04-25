@@ -38,7 +38,7 @@ For authenticated tools: `./scripts/audit_live.sh --bearer YOUR_API_KEY`
 |-----------|-------|
 | MCP Protocol | `2024-11-05` (Streamable HTTP) |
 | A2A Protocol | `v0.3.0` (Google / Linux Foundation) |
-| MCP Tools | 55 |
+| MCP Tools | 59 |
 | A2A Skills | 24 |
 | A2A TCK Compliance | **82/82 intentional** (80 passing + 2 documented opt-outs) — [see report](TCK_REPORT.md) |
 | Internal Tests | 159/159 passing |
@@ -64,13 +64,13 @@ This repository contains the ThinkNEO Gateway, a dual-protocol server that expos
 
 The gateway implements a bidirectional **MCP-A2A bridge**: MCP clients can dispatch A2A tasks, and A2A agents can call MCP tools. Both protocols share the same governed runtime, meaning all traffic passes through the ThinkNEO Enterprise AI Control Plane for policy enforcement, audit logging, spend tracking, and compliance checks.
 
-The server is production-deployed as a single Docker container, serving MCP on `/mcp` and the A2A Agent Card at `/.well-known/agent.json`. All 55 MCP tools and 24 A2A skills run in the same process, share the same PostgreSQL database, and are wrapped with the same free-tier middleware (500 calls/month, auto-provisioned API keys).
+The server is production-deployed as a single Docker container, serving MCP on `/mcp` and the A2A Agent Card at `/.well-known/agent.json`. All 59 MCP tools and 24 A2A skills run in the same process, share the same PostgreSQL database, and are wrapped with the same free-tier middleware (500 calls/month, auto-provisioned API keys).
 
 ---
 
 ## MCP Tools
 
-55 tools across 12 categories. All tools accept JSON-RPC 2.0 via Streamable HTTP.
+59 tools across 12 categories. All tools accept JSON-RPC 2.0 via Streamable HTTP.
 
 ### Governance (6)
 
@@ -368,7 +368,7 @@ Auto-provision a free API key (500 calls/month):
 POST https://mcp.thinkneo.ai/mcp/signup
 ```
 
-No credit card required. All 55 tools available on the free tier.
+No credit card required. All 59 tools available on the free tier.
 
 ## Self-Hosted Deployment
 
