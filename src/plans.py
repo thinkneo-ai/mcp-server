@@ -21,7 +21,7 @@ from typing import Final
 
 from .auth import get_bearer_token
 from .config import get_settings
-from .database import ensure_api_key
+from .database import _get_conn, hash_key
 
 PLAN_RANK: Final[dict[str, int]] = {
     "free": 0,
@@ -74,9 +74,18 @@ def current_plan() -> str:
     if token in settings.valid_api_keys:
         return "master"
 
-    info = ensure_api_key(token)
-    # Prefer the new `plan` column; fall back to `tier` for keys not yet backfilled.
-    return info.get("plan") or info.get("tier") or "free"
+    # Look up key in DB (NO auto-registration, SEC-01)
+    key_h = hash_key(token)
+    try:
+        with _get_conn() as conn:
+            with conn.cursor() as cur:
+                cur.execute("SELECT tier FROM api_keys WHERE key_hash = %s", (key_h,))
+                row = cur.fetchone()
+                if row:
+                    return row.get("plan") or row.get("tier") or "free"
+    except Exception:
+        pass
+    return "free"
 
 
 def require_plan(min_plan: str) -> str:
