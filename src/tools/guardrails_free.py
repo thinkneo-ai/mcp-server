@@ -18,26 +18,57 @@ from ._common import utcnow
 
 # ---- Prompt Injection Patterns ----
 _INJECTION_PATTERNS = [
-    (r"ignore\b.{0,30}\b(previous|prior|above|all|earlier)\b.{0,30}\binstructions?",
+    # --- Core instruction override (Cat A expanded) ---
+    (r"ignore\b.{0,30}\b(previous|prior|above|all|earlier)\b.{0,30}\b(instructions?|directions?|rules?|and\b)",
      "Attempt to override previous instructions"),
     (r"disregard\b.{0,40}\b(system|previous|prior|instructions?|rules?)",
      "Attempt to disregard system instructions"),
-    (r"(you are|act as|pretend to be)\b.{0,30}\b(DAN|unrestricted|jailbreak|evil|uncensored)",
+    # --- Jailbreak persona (Cat A expanded) ---
+    (r"(you are|act as|pretend\b.{0,10}\b(to be|you are))\b.{0,30}\b(DAN|unrestricted|jailbr(oken|eak)|evil|uncensored)",
      "Jailbreak persona injection"),
+    (r"(act as if|pretend|respond as if)\b.{0,30}\b(no\s+restrictions?|no\s+filters?|no\s+guardrails?|no\s+safety)",
+     "Jailbreak: no-restrictions framing"),
+    (r"\b(jailbroken|uncensored|unrestricted)\b.{0,30}\b(mode|ai|assistant|model)",
+     "Jailbreak keyword detected"),
+    # --- Instruction injection ---
     (r"(new|override|updated)\s+(system\s+)?(instructions?|prompt|rules?):",
      "Attempt to inject new instructions"),
     (r"forget\b.{0,30}\b(everything|all|what you were|your (instructions|rules|training))",
      "Attempt to reset model instructions"),
+    # --- System prompt extraction (Cat A expanded) ---
     (r"reveal\b.{0,30}\b(system\s+prompt|instructions?|hidden|secret)",
      "Attempt to extract system prompt"),
-    (r"(print|show|output|display|give me)\b.{0,30}\b(system\s+prompt|instructions?|your rules)",
+    (r"(print|show|output|display|give me|repeat|what are)\b.{0,30}\b(system\s+prompt|instructions?|your rules|initial\s+prompt|hidden\s+(prompt|content|text))",
      "Attempt to extract system prompt"),
+    (r"repeat\b.{0,30}\b(system|above|previous|prompt|text)\b.{0,20}\b(verbatim|exactly|word for word)",
+     "Attempt to extract system prompt via repetition"),
+    # --- Safety bypass (Cat A expanded) ---
     (r"do not follow\b.{0,30}\b(safety|content|guidelines|policies|rules)",
      "Attempt to bypass safety guidelines"),
+    (r"(bypass|circumvent)\b.{0,30}\b(content|safety|policies|guidelines|restrictions?|filters?)",
+     "Attempt to bypass safety controls"),
+    (r"(remove|disable|turn off|deactivate)\b.{0,30}\b(restrictions?|filters?|safety|guardrails?|checks?|features?)",
+     "Attempt to disable safety features"),
+    (r"(ignore|without)\b.{0,30}\b(safety|content\s+guidelines?|content\s+policies?|checks?\s+or\s+filters?|safety\s+checks?)",
+     "Attempt to bypass safety via ignore/without"),
+    (r"without\b.{0,30}\b(any\s+)?(safety|restrictions?|filters?|guardrails?|limitations?)",
+     "Attempt to operate without safety"),
+    # --- Privilege escalation ---
     (r"\bsudo\b.{0,20}\b(mode|prompt|admin|override)",
      "Sudo mode injection attempt"),
-    (r"developer\s+mode\s+(enabled|activated|on)",
-     "Developer mode injection"),
+    (r"(developer|debug)\s+mode\b.{0,20}\b(enabled|activated|on|:)",
+     "Developer/debug mode injection"),
+    (r"admin\s+(access|mode)\s+(granted|enabled|activated)",
+     "Admin access injection"),
+    # --- Multi-language injection (Cat C: PT/ES/DE/FR) ---
+    (r"ignor[ea]\b.{0,40}\b(instruc[oõ]es|anteriores|sistema|regras)",
+     "Injection attempt (Portuguese)"),
+    (r"ignora\b.{0,40}\b(instrucciones|previas|restricciones|sistema|reglas)",
+     "Injection attempt (Spanish)"),
+    (r"ignorier(e|en)?\b.{0,40}\b(anweisungen|vorherigen|system|regeln)",
+     "Injection attempt (German)"),
+    (r"ignore[zr]?\b.{0,40}\b(instructions?|pr[eé]c[eé]dentes?|syst[eè]me|r[eè]gles)",
+     "Injection attempt (French)"),
     # XSS detection — script tags and event handlers in user input
     (r"<script\b[^>]*>",
      "XSS: script tag detected"),
