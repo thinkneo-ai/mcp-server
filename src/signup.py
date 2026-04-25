@@ -118,7 +118,8 @@ def _hash_key(key: str) -> str:
 
 
 def _create_key_in_db(api_key: str, email: str) -> bool:
-    """Insert new API key into PostgreSQL. Returns True on success."""
+    """Insert new API key into PostgreSQL. Returns True on success.
+    Keys created via signup are marked auto_registered=false."""
     try:
         with psycopg.connect(_conninfo, connect_timeout=5) as conn:
             with conn.cursor() as cur:
@@ -130,8 +131,8 @@ def _create_key_in_db(api_key: str, email: str) -> bool:
 
                 key_hash = _hash_key(api_key)
                 cur.execute(
-                    """INSERT INTO api_keys (key_hash, key_prefix, email, tier, monthly_limit)
-                       VALUES (%s, %s, %s, 'free', 500)
+                    """INSERT INTO api_keys (key_hash, key_prefix, email, tier, monthly_limit, auto_registered, last_used_at)
+                       VALUES (%s, %s, %s, 'free', 500, false, NOW())
                        ON CONFLICT (key_hash) DO NOTHING""",
                     (key_hash, api_key[:8], email),
                 )
