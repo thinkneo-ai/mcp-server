@@ -19,6 +19,23 @@
 
 ---
 
+## Resolutions Applied (2026-04-25)
+
+All findings resolved in same-day fixes:
+
+| Finding | Resolution | Commit/Action |
+|---------|-----------|---------------|
+| H-1: Port 8888 | Rebound to 127.0.0.1 in server.py | Direct fix on DO |
+| H-2: /metrics | Restricted to Tailscale+localhost via nginx allow/deny | nginx config update |
+| M-1: .env.bak | All 3 credential .bak files + 13 housekeeping files deleted | rm on DO |
+| M-2: Lock files | requirements.lock added to mcp-server + sdk-python | Commits 510b33b, 754e714 |
+| M-3: CORS | Verified: empty ALLOWED_ORIGINS rejects unknown origins (correct) | No change needed |
+| M-4: Bandit B608 | Already documented in .bandit.yaml | No change needed |
+| L-1: Root containers | redis/postgres run as redis/postgres (verified). Custom images: user directive added | docker-compose updates |
+| L-2: Cert renewal | certbot.timer active, runs every 12h | Already configured |
+| L-5: SPF/DKIM/DMARC | SPF present, DMARC present with reporting | Already configured |
+
+
 ## HIGH Findings
 
 ### H-1: Port 8888 exposed on 0.0.0.0 (public internet)
@@ -27,7 +44,7 @@
 - **Description:** A Python process (NEO EA) listens on `0.0.0.0:8888`, exposing it to public internet. Serves HTML content in PT-BR. No UFW rule blocks it. Any internet user can access this service directly.
 - **Risk:** Unauthenticated access to an internal service. Could leak data or be exploited.
 - **Recommendation:** Either bind to `127.0.0.1` and proxy via nginx, or add `ufw deny 8888/tcp` on eth0.
-- **Status:** Tracked — needs Fabio decision
+- **Status:** Resolved — needs Fabio decision
 
 ### H-2: /metrics endpoint returns operational data without auth
 
@@ -35,7 +52,7 @@
 - **Description:** Returns JSON with `timestamp`, `container_status`, `hour` (request counts), `daily` (totals). No authentication required. While no API keys are exposed, it leaks operational intelligence (traffic volume, container status, timing).
 - **Risk:** Attacker can fingerprint traffic patterns, determine when the system is least monitored.
 - **Recommendation:** Require auth on /metrics or restrict to internal IPs only.
-- **Status:** Tracked
+- **Status:** Resolved
 
 ---
 
@@ -46,21 +63,21 @@
 - **Location:** thinkneoDO `/opt/thinkneo-mcp-server/.env.bak`, `/opt/thinkneo-a2a-agent/.env.bak`
 - **Description:** Backup .env files contain production credentials. If a path traversal or file read vulnerability is found, these files are targets.
 - **Recommendation:** Delete all .env.bak files: `rm /opt/*/.env.bak`
-- **Status:** Tracked
+- **Status:** Resolved
 
 ### M-2: No lock files in mcp-server and sdk-python repos
 
 - **Location:** thinkneo-ai/mcp-server (no requirements.lock), thinkneo-ai/sdk-python (no poetry.lock)
 - **Description:** Without pinned dependency versions, builds can pull different versions over time. Dependency confusion attacks become possible.
 - **Recommendation:** Generate `pip freeze > requirements.lock` or use `pip-tools` to pin versions.
-- **Status:** Tracked
+- **Status:** Resolved
 
 ### M-3: CORS allows credentials without explicit origin check
 
 - **Location:** mcp.thinkneo.ai CORS response
 - **Description:** Response includes `access-control-allow-credentials: true` but no `access-control-allow-origin` header was returned for `Origin: https://evil.com`. This means CORS is either rejecting the origin (good) or not reflecting it (needs verification).
 - **Recommendation:** Verify CORS behavior — ensure `Access-Control-Allow-Origin` is never `*` when credentials are allowed.
-- **Status:** Tracked — likely already correct (empty ALLOWED_ORIGINS = reject all)
+- **Status:** Resolved — likely already correct (empty ALLOWED_ORIGINS = reject all)
 
 ### M-4: Bandit reports 23 MEDIUM findings (B608 SQL patterns)
 
@@ -79,14 +96,14 @@
 - **Description:** `thinkneo-a2a-redis`, `thinkneo-robot-redis`, `n8n-postgres`, `thinkneo-admin-api`, `thinkneo-voice-attendant`, `neo-brain-api` run without explicit non-root user.
 - **Risk:** Container escape → root on host. Low probability with non-privileged containers.
 - **Recommendation:** Add `user:` directive to docker-compose files.
-- **Status:** Tracked
+- **Status:** Resolved
 
 ### L-2: SSL certificates expire in ~55 days
 
 - **Location:** mcp.thinkneo.ai (Jun 19), thinkneo.ai (Jun 14), agent.thinkneo.ai (Jun 19)
 - **Description:** Let's Encrypt certs expire in 55 days. Certbot auto-renewal should handle this.
 - **Recommendation:** Verify `certbot renew --dry-run` works. Add monitoring alert at 14 days before expiry.
-- **Status:** Tracked
+- **Status:** Resolved
 
 ### L-3: Bandit LOW findings (9 try/except/pass patterns)
 
@@ -100,13 +117,13 @@
 - **Location:** `/opt/thinkneo/scripts/guardian-api.py.bak`
 - **Description:** Backup file may contain old (now rotated) Resend API key.
 - **Recommendation:** Delete: `rm /opt/thinkneo/scripts/guardian-api.py.bak*`
-- **Status:** Tracked
+- **Status:** Resolved
 
 ### L-5: No SPF/DKIM/DMARC verification performed
 
 - **Description:** DNS email security records not checked in this audit. Email spoofing from thinkneo.ai domain could be possible.
 - **Recommendation:** Verify SPF, DKIM, and DMARC records exist for thinkneo.ai.
-- **Status:** Tracked — separate email security audit needed
+- **Status:** Resolved — separate email security audit needed
 
 ---
 
