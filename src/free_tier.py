@@ -3,11 +3,15 @@ Free Tier Middleware — usage tracking and rate limiting for the ThinkNEO MCP S
 
 On every tool call:
 1. Check if an API key is provided
-2. If no key: allow public tools unlimited (provider_status, schedule_demo, read_memory)
-3. If key provided: check monthly usage against limit
-4. If over limit: return friendly upgrade message
-5. Auto-register new API keys on first use (free tier)
-6. Track usage in PostgreSQL
+2. If no key: allow public tools with IP-based rate limit (30/hour)
+3. If key provided AND registered (via /mcp/signup): check monthly usage
+4. If key provided but NOT registered: treat as anonymous
+5. Track usage in PostgreSQL
+6. Update last_used_at for cleanup protection (hourly granularity)
+
+SEC-01 fix: Removed auto-registration of arbitrary Bearer tokens.
+Only keys created via /mcp/signup are recognized. Unknown tokens
+get anonymous access to public tools with IP rate limiting.
 """
 
 from __future__ import annotations
@@ -17,7 +21,9 @@ import logging
 from typing import Any, Optional
 
 from .auth import get_bearer_token, is_authenticated
-from .database import ensure_api_key, get_monthly_usage, hash_key, log_tool_call
+from .database import _get_conn, get_monthly_usage, hash_key, log_tool_call
+from .redis_client import check_ip_rate
+from .security import get_client_ip
 
 logger = logging.getLogger(__name__)
 
@@ -26,13 +32,13 @@ PUBLIC_TOOLS = {
     "thinkneo_provider_status",
     "thinkneo_schedule_demo",
     "thinkneo_read_memory",
-    "thinkneo_usage",       # Usage tool itself is always accessible
-    "thinkneo_check",       # Free-tier guardrail check
-    "thinkneo_simulate_savings",  # Smart Router lead gen — free
-    "thinkneo_get_trust_badge",      # Public trust badge lookup
-    "thinkneo_registry_search",   # Marketplace — free discovery
-    "thinkneo_registry_get",      # Marketplace — free details
-    "thinkneo_registry_install",  # Marketplace — free install tracking
+    "thinkneo_usage",
+    "thinkneo_check",
+    "thinkneo_simulate_savings",
+    "thinkneo_get_trust_badge",
+    "thinkneo_registry_search",
+    "thinkneo_registry_get",
+    "thinkneo_registry_install",
 }
 
 # Estimated cost per tool call in USD (very rough estimates)
@@ -68,29 +74,58 @@ TOOL_COST_ESTIMATES = {
     "thinkneo_registry_publish": 0.003,
     "thinkneo_registry_review": 0.001,
     "thinkneo_registry_install": 0.001,
-    # Outcome Validation Loop (2026-04-24)
     "thinkneo_register_claim": 0.003,
     "thinkneo_verify_claim": 0.005,
     "thinkneo_get_proof": 0.002,
     "thinkneo_verification_dashboard": 0.003,
-    # Policy Engine (2026-04-24)
     "thinkneo_policy_create": 0.003,
     "thinkneo_policy_list": 0.002,
     "thinkneo_policy_evaluate": 0.004,
     "thinkneo_policy_violations": 0.002,
-    # Outcome Benchmarking (2026-04-24)
     "thinkneo_benchmark_report": 0.003,
     "thinkneo_benchmark_compare": 0.003,
     "thinkneo_router_explain": 0.003,
-    # Compliance Export (2026-04-24)
     "thinkneo_compliance_generate": 0.005,
     "thinkneo_compliance_list": 0.002,
-    # Agent SLA (2026-04-24)
     "thinkneo_sla_define": 0.003,
     "thinkneo_sla_status": 0.003,
     "thinkneo_sla_breaches": 0.002,
     "thinkneo_sla_dashboard": 0.003,
 }
+
+# IP rate limit for anonymous public tool access
+_PUBLIC_TOOL_LIMIT_PER_HOUR = 30
+_PUBLIC_TOOL_WINDOW_SECONDS = 3600
+
+
+def _lookup_key(key_hash: str) -> Optional[dict]:
+    """Look up an API key in the database. Returns row dict or None."""
+    try:
+        with _get_conn() as conn:
+            with conn.cursor() as cur:
+                cur.execute("SELECT * FROM api_keys WHERE key_hash = %s", (key_hash,))
+                row = cur.fetchone()
+                return dict(row) if row else None
+    except Exception as exc:
+        logger.warning("DB key lookup failed: %s", exc)
+        return None
+
+
+def _touch_last_used(key_hash: str) -> None:
+    """Update last_used_at if stale (>1 hour). Reduces DB write contention."""
+    try:
+        with _get_conn() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    UPDATE api_keys SET last_used_at = NOW()
+                    WHERE key_hash = %s
+                      AND (last_used_at IS NULL OR last_used_at < NOW() - INTERVAL '1 hour')
+                    """,
+                    (key_hash,),
+                )
+    except Exception:
+        pass  # Non-critical — best effort
 
 
 def check_free_tier(tool_name: str) -> Optional[str]:
@@ -98,25 +133,37 @@ def check_free_tier(tool_name: str) -> Optional[str]:
     Check if the current request is within free-tier limits.
 
     Returns None if allowed, or a JSON error string if the request should be blocked.
-    Also logs the tool call to the database.
     """
     token = get_bearer_token()
 
-    # No token provided — only allow public tools, skip DB for them
+    # ── No token: anonymous access to public tools with IP rate limit ──
     if not token:
         if tool_name in PUBLIC_TOOLS:
+            # IP-based rate limit for anonymous callers
+            client_ip = get_client_ip() or "unknown"
+            allowed, count = check_ip_rate(
+                "publicrl", client_ip,
+                _PUBLIC_TOOL_LIMIT_PER_HOUR, _PUBLIC_TOOL_WINDOW_SECONDS,
+            )
+            if not allowed:
+                return json.dumps({
+                    "error": "rate_limit_exceeded",
+                    "message": f"Anonymous rate limit: {_PUBLIC_TOOL_LIMIT_PER_HOUR}/hour. "
+                               "Sign up at https://mcp.thinkneo.ai/mcp/signup for 500/month free.",
+                    "limit": _PUBLIC_TOOL_LIMIT_PER_HOUR,
+                    "current": count,
+                    "retry_after": 60,
+                    "signup_url": "https://mcp.thinkneo.ai/mcp/signup",
+                })
             log_tool_call(
                 key_hash="anonymous",
                 tool_name=tool_name,
                 cost_estimate=TOOL_COST_ESTIMATES.get(tool_name, 0.001),
             )
             return None  # Allowed
-        # Non-public tool without auth — let the existing auth system handle it
-        return None
+        return None  # Non-public tool without auth — require_auth() handles
 
-    # Token provided — check if it's already validated by the original auth system
-    # (i.e. in THINKNEO_MCP_API_KEYS / THINKNEO_API_KEY env vars).
-    # If so, treat as enterprise (unlimited, no free-tier limit).
+    # ── Token provided: check if it's a trusted master key ──
     if is_authenticated():
         key_h = hash_key(token)
         log_tool_call(
@@ -124,23 +171,51 @@ def check_free_tier(tool_name: str) -> Optional[str]:
             tool_name=tool_name,
             cost_estimate=TOOL_COST_ESTIMATES.get(tool_name, 0.001),
         )
+        _touch_last_used(key_h)
         return None  # Allowed — trusted key
 
-    # Token NOT in the trusted keys list — this is a free-tier / self-registered key.
-    # For non-public tools, reject (they need a trusted key).
-    if tool_name not in PUBLIC_TOOLS:
-        return None  # Let the original require_auth() handle the rejection
-
-    # Public/free tool with an unknown token — auto-register and apply free-tier limits.
-    key_info = ensure_api_key(token)
+    # ── Token provided but NOT a master key ──
+    # Look up in DB (only signup-created keys will exist)
     key_h = hash_key(token)
-    monthly_limit = key_info.get("monthly_limit", 500)
+    key_info = _lookup_key(key_h)
+
+    if not key_info:
+        # Unknown token — NOT auto-registered (SEC-01 fix).
+        # For public tools: treat as anonymous with IP rate limit.
+        if tool_name in PUBLIC_TOOLS:
+            client_ip = get_client_ip() or "unknown"
+            allowed, count = check_ip_rate(
+                "publicrl", client_ip,
+                _PUBLIC_TOOL_LIMIT_PER_HOUR, _PUBLIC_TOOL_WINDOW_SECONDS,
+            )
+            if not allowed:
+                return json.dumps({
+                    "error": "rate_limit_exceeded",
+                    "message": f"Anonymous rate limit: {_PUBLIC_TOOL_LIMIT_PER_HOUR}/hour. "
+                               "Sign up at https://mcp.thinkneo.ai/mcp/signup for 500/month free.",
+                    "limit": _PUBLIC_TOOL_LIMIT_PER_HOUR,
+                    "current": count,
+                    "retry_after": 60,
+                    "signup_url": "https://mcp.thinkneo.ai/mcp/signup",
+                })
+            log_tool_call(
+                key_hash="anonymous",
+                tool_name=tool_name,
+                cost_estimate=TOOL_COST_ESTIMATES.get(tool_name, 0.001),
+            )
+            return None  # Allowed as anonymous
+        # Non-public tool with unknown token — require_auth() handles
+        return None
+
+    # ── Known key (from /mcp/signup) — apply free-tier limits ──
     tier = key_info.get("tier", "free")
+    monthly_limit = key_info.get("monthly_limit", 500)
 
     # Enterprise tier — unlimited
     if tier == "enterprise":
         cost = TOOL_COST_ESTIMATES.get(tool_name, 0.001)
         log_tool_call(key_hash=key_h, tool_name=tool_name, cost_estimate=cost)
+        _touch_last_used(key_h)
         return None
 
     # Check monthly usage
@@ -161,9 +236,10 @@ def check_free_tier(tool_name: str) -> Optional[str]:
             "reset": "Limits reset on the 1st of each month.",
         }, indent=2)
 
-    # Within limits — log the call
+    # Within limits — log and allow
     cost = TOOL_COST_ESTIMATES.get(tool_name, 0.001)
     log_tool_call(key_hash=key_h, tool_name=tool_name, cost_estimate=cost)
+    _touch_last_used(key_h)
 
     return None  # Allowed
 
@@ -171,7 +247,6 @@ def check_free_tier(tool_name: str) -> Optional[str]:
 def get_usage_footer(tool_name: str) -> Optional[dict[str, Any]]:
     """
     Generate the _usage footer to append to tool responses.
-    Returns None if no token is present.
     """
     token = get_bearer_token()
 
@@ -186,12 +261,25 @@ def get_usage_footer(tool_name: str) -> Optional[dict[str, Any]]:
         }
 
     key_h = hash_key(token)
-    current_usage = get_monthly_usage(key_h)
 
-    # Get key info
-    key_info = ensure_api_key(token)
+    # Check if key exists in DB (NO auto-registration — SEC-01 fix)
+    key_info = _lookup_key(key_h)
+
+    if not key_info:
+        # Unknown token — return anonymous stats without registering
+        return {
+            "calls_used": 0,
+            "calls_remaining": "unlimited (public tool)",
+            "tier": "anonymous",
+            "monthly_limit": "N/A",
+            "estimated_cost_usd": 0.0,
+            "upgrade_url": "https://thinkneo.ai/pricing",
+            "note": "Unrecognized API key. Sign up at https://mcp.thinkneo.ai/mcp/signup for tracked usage.",
+        }
+
     monthly_limit = key_info.get("monthly_limit", 500)
     tier = key_info.get("tier", "free")
+    current_usage = get_monthly_usage(key_h)
     cost = TOOL_COST_ESTIMATES.get(tool_name, 0.001)
 
     return {
