@@ -2,11 +2,12 @@
 NVIDIA NIM provider compatibility tests.
 
 Models verified 2026-04-25:
-- nvidia/llama-3.1-nemotron-70b-instruct
+- nvidia/llama-3.3-nemotron-super-49b-v1 (Nemotron Super — current flagship)
 - nvidia/nemotron-mini-4b-instruct
 
 Source: https://build.nvidia.com/nvidia
 Note: NVIDIA NIM uses OpenAI-compatible API format.
+Note: nvidia/llama-3.1-nemotron-70b-instruct deprecated (404 as of 2026-04-25).
 """
 
 import json
@@ -17,7 +18,7 @@ from .conftest import get_key, measure_call, log_latency, validate_chat_response
 API_URL = "https://integrate.api.nvidia.com/v1/chat/completions"
 
 MODELS = [
-    "nvidia/llama-3.1-nemotron-70b-instruct",
+    "nvidia/llama-3.3-nemotron-super-49b-v1",
     "nvidia/nemotron-mini-4b-instruct",
 ]
 
