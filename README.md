@@ -15,6 +15,7 @@
 [![Python SDK](https://img.shields.io/pypi/v/thinkneo.svg?label=Python%20SDK)](https://pypi.org/project/thinkneo/)
 [![TypeScript SDK](https://img.shields.io/npm/v/@thinkneo_ai/sdk.svg?label=TypeScript%20SDK)](https://www.npmjs.com/package/@thinkneo_ai/sdk)
 [![Provider Compat](https://github.com/thinkneo-ai/mcp-server/actions/workflows/provider_compat.yml/badge.svg)](https://github.com/thinkneo-ai/mcp-server/actions/workflows/provider_compat.yml)
+[![Chaos Tests](https://github.com/thinkneo-ai/mcp-server/actions/workflows/chaos.yml/badge.svg)](https://github.com/thinkneo-ai/mcp-server/actions/workflows/chaos.yml)
 [![Glama](https://glama.ai/mcp/servers/ThinkneoAI/mcp-server/badge)](https://glama.ai/mcp/servers/ThinkneoAI/mcp-server)
 
 ---
@@ -397,6 +398,20 @@ Gateway at `http://localhost:8081/mcp`. See [self-hosted quickstart](docs/self-h
 - Dedicated support and SLA
 
 Contact: [hello@thinkneo.ai](mailto:hello@thinkneo.ai)
+
+---
+
+## Reliability
+
+Tested weekly against 5 failure scenarios using [toxiproxy](https://github.com/Shopify/toxiproxy) + [WireMock](https://wiremock.org/):
+
+1. **PostgreSQL down** — public tools work, DB tools degrade gracefully, auto-recovery
+2. **Redis down** — rate limiting fails open, no crash, auto-recovery
+3. **Provider timeout** — 30s latency injected, gateway timeouts within 15s
+4. **Provider 429** — handles rate limits, no infinite loop, per-key isolation
+5. **High latency** — 5s latency, concurrent requests complete, P95 < 2s for pure tools
+
+See [chaos report](docs/reliability/chaos-report.md) and [runbook](docs/reliability/runbook.md).
 
 ---
 

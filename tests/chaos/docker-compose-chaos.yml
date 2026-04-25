@@ -1,0 +1,57 @@
+# Chaos Engineering — isolated test stack
+# Port 18081 to avoid conflict with production
+
+services:
+  gateway:
+    build:
+      context: ../..
+      dockerfile: Dockerfile
+    container_name: thinkneo-chaos-gateway
+    ports:
+      - "18081:8081"
+    environment:
+      HOST: "0.0.0.0"
+      PORT: "8081"
+      MCP_DB_HOST: "postgres"
+      MCP_DB_PORT: "5432"
+      MCP_DB_NAME: "thinkneo_mcp_chaos"
+      MCP_DB_USER: "mcp_user"
+      MCP_DB_PASSWORD: "chaos_test_pw"
+      THINKNEO_API_KEY: "chaos-test-key"
+      OTEL_ENABLED: "false"
+      LOG_REDACTION: "true"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: thinkneo-chaos-postgres
+    environment:
+      POSTGRES_DB: thinkneo_mcp_chaos
+      POSTGRES_USER: mcp_user
+      POSTGRES_PASSWORD: chaos_test_pw
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "mcp_user"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: thinkneo-chaos-redis
+
+  toxiproxy:
+    image: ghcr.io/shopify/toxiproxy:2.9.0
+    container_name: thinkneo-chaos-toxiproxy
+    ports:
+      - "8474:8474"     # API
+      - "15432:15432"   # PG proxy
+      - "18080:18080"   # Provider proxy
+
+  wiremock:
+    image: wiremock/wiremock:3.5.4
+    container_name: thinkneo-chaos-wiremock
+    ports:
+      - "18089:8080"
+    command: ["--verbose"]
