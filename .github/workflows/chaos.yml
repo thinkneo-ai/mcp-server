@@ -1,0 +1,75 @@
+name: Chaos Tests
+
+on:
+  schedule:
+    - cron: '0 3 * * 0'   # Sunday 03:00 UTC
+  workflow_dispatch:
+
+jobs:
+  chaos:
+    name: Chaos Engineering (5 scenarios)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install httpx pytest pytest-timeout
+
+      - name: Start chaos stack
+        run: docker compose -f tests/chaos/docker-compose-chaos.yml up -d --build
+
+      - name: Wait for stack health
+        run: |
+          echo "Waiting for gateway..."
+          for i in $(seq 1 90); do
+            curl -sf http://localhost:18081/mcp/docs > /dev/null 2>&1 && break || sleep 2
+          done
+          echo "Waiting for toxiproxy..."
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:8474/proxies > /dev/null 2>&1 && break || sleep 2
+          done
+          echo "Waiting for wiremock..."
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:18089/__admin/mappings > /dev/null 2>&1 && break || sleep 2
+          done
+          echo "Stack ready."
+
+      - name: Run chaos tests
+        run: pytest tests/chaos/ -v --timeout=180 -s
+
+      - name: Collect logs
+        if: always()
+        run: docker compose -f tests/chaos/docker-compose-chaos.yml logs > chaos-logs.txt 2>&1
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: chaos-logs-${{ github.run_number }}
+          path: chaos-logs.txt
+
+      - name: Cleanup
+        if: always()
+        run: docker compose -f tests/chaos/docker-compose-chaos.yml down -v
+
+  notify:
+    name: Notify on failure
+    runs-on: ubuntu-latest
+    needs: [chaos]
+    if: failure()
+    permissions:
+      issues: write
+    steps:
+      - uses: actions/checkout@v4
+      - env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh issue create --repo thinkneo-ai/mcp-server \
+            --title "Chaos test failure — $(date -u +%Y-%m-%d)" \
+            --body "Chaos engineering tests failed on $(date -u '+%Y-%m-%d %H:%M UTC').
+
+          **Run:** ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+          Review the chaos-logs artifact for details." \
+            --label "chaos-failure"
