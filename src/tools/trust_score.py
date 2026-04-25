@@ -753,7 +753,7 @@ def register(mcp: FastMCP) -> None:
             "Part of the 'From Prompt to Proof' framework. "
             "Requires authentication."
         ),
-        annotations=ToolAnnotations(readOnlyHint=False, idempotentHint=False),
+        annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=True, idempotentHint=False, openWorldHint=False),
     )
     def thinkneo_evaluate_trust_score(
         org_name: Annotated[str, Field(description="Organization name for the trust score badge (e.g., 'Acme Corp')")],
@@ -849,7 +849,7 @@ def register(mcp: FastMCP) -> None:
             "Use the badge URL to embed the trust badge in websites and documentation. "
             "No authentication required."
         ),
-        annotations=ToolAnnotations(readOnlyHint=True, idempotentHint=True),
+        annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False),
     )
     def thinkneo_get_trust_badge(
         report_token: Annotated[str, Field(description="The report token from a trust score evaluation (URL-safe string)")],

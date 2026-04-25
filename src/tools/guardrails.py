@@ -25,7 +25,7 @@ def register(mcp: FastMCP) -> None:
             "sending it to an AI provider. Returns risk assessment, violations found, "
             "and recommendations. Requires authentication."
         ),
-        annotations=ToolAnnotations(readOnlyHint=True, idempotentHint=True),
+        annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False),
     )
     def thinkneo_evaluate_guardrail(
         text: Annotated[str, Field(description="The prompt or text content to evaluate for policy violations (max 32,000 characters)")],

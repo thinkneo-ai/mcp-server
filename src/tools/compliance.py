@@ -48,7 +48,7 @@ def register(mcp: FastMCP) -> None:
             "Shows governance score, pending actions, and compliance gaps. "
             "Requires authentication."
         ),
-        annotations=ToolAnnotations(readOnlyHint=True, idempotentHint=True),
+        annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False),
     )
     def thinkneo_get_compliance_status(
         workspace: Annotated[str, Field(description="Workspace name or ID to evaluate compliance readiness for")],

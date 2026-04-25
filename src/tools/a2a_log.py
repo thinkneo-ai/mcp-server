@@ -25,7 +25,7 @@ def register(mcp: FastMCP) -> None:
             "what action was performed, the cost, outcome, and latency. "
             "Also enforces A2A policies if configured — returns policy_blocked if the interaction is not allowed."
         ),
-        annotations=ToolAnnotations(readOnlyHint=False, idempotentHint=False),
+        annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=True, idempotentHint=False, openWorldHint=False),
     )
     def thinkneo_a2a_log(
         from_agent: Annotated[str, Field(description="Name of the calling agent, e.g. 'orchestrator', 'support-bot'")],

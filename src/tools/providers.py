@@ -82,7 +82,7 @@ def register(mcp: FastMCP) -> None:
             "through the ThinkNEO gateway. Shows latency, error rates, and "
             "availability. No authentication required."
         ),
-        annotations=ToolAnnotations(readOnlyHint=True, idempotentHint=True),
+        annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False),
     )
     def thinkneo_provider_status(
         provider: Annotated[Optional[str], Field(description="Specific provider to check: openai, anthropic, google, mistral, xai, cohere, or together. Omit to get status for all providers.")] = None,

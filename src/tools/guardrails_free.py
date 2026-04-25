@@ -121,7 +121,7 @@ def register(mcp: FastMCP) -> None:
             "Returns a safety assessment with specific warnings. "
             "No authentication required."
         ),
-        annotations=ToolAnnotations(readOnlyHint=True, idempotentHint=True),
+        annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False),
     )
     def thinkneo_check(
         text: Annotated[str, Field(description="The text or prompt to check for safety issues (max 50,000 characters)")],

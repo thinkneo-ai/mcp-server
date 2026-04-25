@@ -25,7 +25,7 @@ def register(mcp: FastMCP) -> None:
             "with daily trend, success rate, and comparison to pre-AI baseline. "
             "Answers: 'Is this agent generating or consuming value?' and 'What's the ROI trend?'"
         ),
-        annotations=ToolAnnotations(readOnlyHint=True, idempotentHint=True),
+        annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False),
     )
     def thinkneo_agent_roi(
         workspace: Annotated[str, Field(description="Workspace identifier")] = "default",

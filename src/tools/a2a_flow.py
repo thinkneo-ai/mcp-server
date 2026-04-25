@@ -25,7 +25,7 @@ def register(mcp: FastMCP) -> None:
             "call frequency, cost, error rates, and latency. Identifies hot paths, bottlenecks, "
             "and anomalous patterns like agent loops or unexpected delegations."
         ),
-        annotations=ToolAnnotations(readOnlyHint=True, idempotentHint=True),
+        annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False),
     )
     def thinkneo_a2a_flow_map(
         workspace: Annotated[str, Field(description="Workspace identifier")] = "default",

@@ -26,7 +26,7 @@ def register(mcp: FastMCP) -> None:
             "Example: agent 'support-bot' resolved a 'customer_support_ticket' at $0.03 AI cost, "
             "replacing a $12 human-handled ticket. ROI: 400:1."
         ),
-        annotations=ToolAnnotations(readOnlyHint=False, idempotentHint=False),
+        annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=True, idempotentHint=False, openWorldHint=False),
     )
     def thinkneo_log_decision(
         agent_name: Annotated[str, Field(description="Name of the AI agent that made the decision, e.g. 'support-bot', 'loan-reviewer'")],

@@ -41,7 +41,7 @@ def register(mcp: FastMCP) -> None:
             "Part of the Outcome Validation Loop — 'From Prompt to Proof'. "
             "Requires authentication."
         ),
-        annotations=ToolAnnotations(readOnlyHint=False, idempotentHint=False),
+        annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=True, idempotentHint=False, openWorldHint=False),
     )
     def thinkneo_register_claim(
         action: Annotated[str, Field(
@@ -119,7 +119,7 @@ def register(mcp: FastMCP) -> None:
             "Part of the Outcome Validation Loop — 'From Prompt to Proof'. "
             "Requires authentication."
         ),
-        annotations=ToolAnnotations(readOnlyHint=False, idempotentHint=True),
+        annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=True, idempotentHint=True, openWorldHint=False),
     )
     def thinkneo_verify_claim(
         claim_id: Annotated[str, Field(description="UUID of the claim to verify (from thinkneo_register_claim)")],
@@ -146,7 +146,7 @@ def register(mcp: FastMCP) -> None:
             "proof hash for tamper detection. This is the 'proof' in 'From Prompt to Proof'. "
             "Requires authentication."
         ),
-        annotations=ToolAnnotations(readOnlyHint=True, idempotentHint=True),
+        annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False),
     )
     def thinkneo_get_proof(
         claim_id: Annotated[str, Field(description="UUID of the claim to get proof for")],
@@ -169,7 +169,7 @@ def register(mcp: FastMCP) -> None:
             "'Datadog for AI outcomes'. "
             "Requires authentication."
         ),
-        annotations=ToolAnnotations(readOnlyHint=True, idempotentHint=True),
+        annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False),
     )
     def thinkneo_verification_dashboard(
         period: Annotated[str, Field(description="Time period: '24h', '7d', or '30d'")] = "7d",

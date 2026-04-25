@@ -36,7 +36,7 @@ def register(mcp: FastMCP) -> None:
             "Returns a session_id to use with thinkneo_log_event and thinkneo_end_trace. "
             "Requires authentication."
         ),
-        annotations=ToolAnnotations(readOnlyHint=False, idempotentHint=False),
+        annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=True, idempotentHint=False, openWorldHint=False),
     )
     def thinkneo_start_trace(
         agent_name: Annotated[str, Field(description="Name of the agent being traced (e.g., 'marketing-agent', 'support-bot')")],
@@ -81,7 +81,7 @@ def register(mcp: FastMCP) -> None:
             "Returns event_id and running session cost. "
             "Requires authentication."
         ),
-        annotations=ToolAnnotations(readOnlyHint=False, idempotentHint=False),
+        annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=True, idempotentHint=False, openWorldHint=False),
     )
     def thinkneo_log_event(
         session_id: Annotated[str, Field(description="Session ID from thinkneo_start_trace")],
@@ -133,7 +133,7 @@ def register(mcp: FastMCP) -> None:
             "Triggers post-session anomaly detection (cost spikes, error rate). "
             "Requires authentication."
         ),
-        annotations=ToolAnnotations(readOnlyHint=False, idempotentHint=False),
+        annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=True, idempotentHint=False, openWorldHint=False),
     )
     def thinkneo_end_trace(
         session_id: Annotated[str, Field(description="Session ID from thinkneo_start_trace")],
@@ -160,7 +160,7 @@ def register(mcp: FastMCP) -> None:
             "session metadata, total cost, duration, and any alerts triggered. "
             "Requires authentication."
         ),
-        annotations=ToolAnnotations(readOnlyHint=True, idempotentHint=True),
+        annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False),
     )
     def thinkneo_get_trace(
         session_id: Annotated[str, Field(description="Session ID to retrieve the trace for")],
@@ -183,7 +183,7 @@ def register(mcp: FastMCP) -> None:
             "Like Datadog, but for AI agents. "
             "Requires authentication."
         ),
-        annotations=ToolAnnotations(readOnlyHint=True, idempotentHint=True),
+        annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False),
     )
     def thinkneo_get_observability_dashboard(
         period: Annotated[str, Field(description="Time period: '1h', '24h', '7d', or '30d'")] = "24h",

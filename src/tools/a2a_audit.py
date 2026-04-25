@@ -26,7 +26,7 @@ def register(mcp: FastMCP) -> None:
             "and outcomes. Supports filtering by agent, action, outcome, and time window. "
             "Essential for compliance, debugging, and understanding multi-agent behavior."
         ),
-        annotations=ToolAnnotations(readOnlyHint=True, idempotentHint=True),
+        annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False),
     )
     def thinkneo_a2a_audit(
         workspace: Annotated[str, Field(description="Workspace identifier")] = "default",

@@ -34,7 +34,7 @@ def register(mcp: FastMCP) -> None:
             "digits, underscores, and hyphens (e.g. 'user_fabio.md', "
             "'project_new_feature.md'). Path traversal is blocked."
         ),
-        annotations=ToolAnnotations(readOnlyHint=False, idempotentHint=True),
+        annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=True, idempotentHint=True, openWorldHint=False),
     )
     def thinkneo_write_memory(
         filename: Annotated[

@@ -28,7 +28,7 @@ def register(mcp: FastMCP) -> None:
             "or 'this flow is 5x more expensive than your best-performing flow'. "
             "This is the diagnostic tool that creates the buying trigger."
         ),
-        annotations=ToolAnnotations(readOnlyHint=True, idempotentHint=True),
+        annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False),
     )
     def thinkneo_detect_waste(
         workspace: Annotated[str, Field(description="Workspace identifier")] = "default",

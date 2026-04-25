@@ -33,7 +33,7 @@ def register(mcp: FastMCP) -> None:
             "Supports versioning — updating a policy creates a new version and disables the old one. "
             "Part of the Policy Engine — Governance-as-Code. Requires authentication."
         ),
-        annotations=ToolAnnotations(readOnlyHint=False, idempotentHint=False),
+        annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=True, idempotentHint=False, openWorldHint=False),
     )
     def thinkneo_policy_create(
         name: Annotated[str, Field(description="Policy name (e.g., 'approval_over_10k', 'pii_blocked_models')")],
@@ -87,7 +87,7 @@ def register(mcp: FastMCP) -> None:
             "Shows policy name, version, conditions, effect, and scope. "
             "Requires authentication."
         ),
-        annotations=ToolAnnotations(readOnlyHint=True, idempotentHint=True),
+        annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False),
     )
     def thinkneo_policy_list(
         include_disabled: Annotated[bool, Field(
@@ -113,7 +113,7 @@ def register(mcp: FastMCP) -> None:
             "each violation triggers. Use this before executing agent actions to enforce "
             "governance rules. Requires authentication."
         ),
-        annotations=ToolAnnotations(readOnlyHint=False, idempotentHint=True),
+        annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=True, idempotentHint=True, openWorldHint=False),
     )
     def thinkneo_policy_evaluate(
         context: Annotated[dict, Field(
@@ -145,7 +145,7 @@ def register(mcp: FastMCP) -> None:
             "agents, how many blocks/warnings/approvals occurred. Shows unresolved "
             "violations for compliance follow-up. Requires authentication."
         ),
-        annotations=ToolAnnotations(readOnlyHint=True, idempotentHint=True),
+        annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False),
     )
     def thinkneo_policy_violations(
         days: Annotated[int, Field(description="Number of days to look back (default 30, max 365)")] = 30,

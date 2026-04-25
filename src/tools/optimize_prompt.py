@@ -173,7 +173,7 @@ def register(mcp: FastMCP) -> None:
             "estimated token savings. "
             "No authentication required."
         ),
-        annotations=ToolAnnotations(readOnlyHint=True, idempotentHint=True),
+        annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False),
     )
     def thinkneo_optimize_prompt(
         prompt: Annotated[str, Field(description="The prompt text to optimize (max 20,000 chars)")],

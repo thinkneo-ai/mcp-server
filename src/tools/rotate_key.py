@@ -40,7 +40,7 @@ def register(mcp: FastMCP) -> None:
             "IMPORTANT: the returned new_key is shown ONCE. Store it securely. "
             "The old key will continue to work for a 5-minute grace period to avoid downtime."
         ),
-        annotations=ToolAnnotations(readOnlyHint=False, idempotentHint=False),
+        annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=True, idempotentHint=False, openWorldHint=False),
     )
     def thinkneo_rotate_key(
         confirm: Annotated[bool, Field(description="Must be true to confirm rotation intent")],

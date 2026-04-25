@@ -42,7 +42,7 @@ def register(mcp: FastMCP) -> None:
             "back to MCP format. Use this to make any MCP tool accessible to A2A agents "
             "(Google's agent ecosystem). Requires authentication."
         ),
-        annotations=ToolAnnotations(readOnlyHint=False, idempotentHint=False),
+        annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=True, idempotentHint=False, openWorldHint=False),
     )
     def thinkneo_bridge_mcp_to_a2a(
         mcp_tool_name: Annotated[
@@ -127,7 +127,7 @@ def register(mcp: FastMCP) -> None:
             "Use this to let A2A agents interact with any MCP server. "
             "Requires authentication."
         ),
-        annotations=ToolAnnotations(readOnlyHint=False, idempotentHint=False),
+        annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=True, idempotentHint=False, openWorldHint=False),
     )
     def thinkneo_bridge_a2a_to_mcp(
         a2a_task: Annotated[
@@ -209,7 +209,7 @@ def register(mcp: FastMCP) -> None:
             "Google's agent ecosystem. Defaults to ThinkNEO's own MCP server. "
             "Requires authentication."
         ),
-        annotations=ToolAnnotations(readOnlyHint=True, idempotentHint=True),
+        annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=True),
     )
     def thinkneo_bridge_generate_agent_card(
         mcp_server_url: Annotated[
@@ -324,7 +324,7 @@ def register(mcp: FastMCP) -> None:
             "30-day translation stats (total, success rate, average latency). "
             "Requires authentication."
         ),
-        annotations=ToolAnnotations(readOnlyHint=True, idempotentHint=True),
+        annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False),
     )
     def thinkneo_bridge_list_mappings() -> str:
         require_auth()

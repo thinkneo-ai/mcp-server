@@ -145,7 +145,7 @@ def register(mcp: FastMCP) -> None:
             "Returns partial matches with positions so you can redact before sending. "
             "No authentication required."
         ),
-        annotations=ToolAnnotations(readOnlyHint=True, idempotentHint=True),
+        annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False),
     )
     def thinkneo_scan_secrets(
         text: Annotated[str, Field(description="Text to scan for secrets (max 100,000 chars)")],

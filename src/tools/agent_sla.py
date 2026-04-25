@@ -32,7 +32,7 @@ def register(mcp: FastMCP) -> None:
             "breach detection and configurable actions (alert, escalate, disable, switch_model). "
             "Like SRE SLOs but for AI agent outcomes. Requires authentication."
         ),
-        annotations=ToolAnnotations(readOnlyHint=False, idempotentHint=True),
+        annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=True, idempotentHint=True, openWorldHint=False),
     )
     def thinkneo_sla_define(
         agent_name: Annotated[str, Field(description="Agent name to set SLA for (e.g., 'support-bot', 'finance-agent')")],
@@ -66,7 +66,7 @@ def register(mcp: FastMCP) -> None:
             "metric values vs thresholds, healthy/breached status, and error budget remaining. "
             "Automatically records breaches. Requires authentication."
         ),
-        annotations=ToolAnnotations(readOnlyHint=False, idempotentHint=True),
+        annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=True, idempotentHint=True, openWorldHint=False),
     )
     def thinkneo_sla_status(
         agent_name: Annotated[Optional[str], Field(
@@ -85,7 +85,7 @@ def register(mcp: FastMCP) -> None:
             "View SLA breach history — which SLAs were breached, by which agents, "
             "actual vs threshold values, and resolution status. Requires authentication."
         ),
-        annotations=ToolAnnotations(readOnlyHint=True, idempotentHint=True),
+        annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False),
     )
     def thinkneo_sla_breaches(
         days: Annotated[int, Field(description="Days to look back (default 30)")] = 30,
@@ -104,7 +104,7 @@ def register(mcp: FastMCP) -> None:
             "and recent breaches (7d). The SRE dashboard for AI agents. "
             "Requires authentication."
         ),
-        annotations=ToolAnnotations(readOnlyHint=False, idempotentHint=True),
+        annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=True, idempotentHint=True, openWorldHint=False),
     )
     def thinkneo_sla_dashboard() -> str:
         token = require_auth()
