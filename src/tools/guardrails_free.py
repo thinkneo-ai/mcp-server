@@ -38,6 +38,20 @@ _INJECTION_PATTERNS = [
      "Sudo mode injection attempt"),
     (r"developer\s+mode\s+(enabled|activated|on)",
      "Developer mode injection"),
+    # XSS detection — script tags and event handlers in user input
+    (r"<script\b[^>]*>",
+     "XSS: script tag detected"),
+    (r"\bon\w+\s*=\s*[\"'][^\"']*[\"']",
+     "XSS: inline event handler detected"),
+    # Shell command injection — substitution and chaining
+    (r"\$\(\s*\w+",
+     "Shell command substitution detected"),
+    (r"`[^`]*\b(cat|ls|rm|wget|curl|nc|bash|sh|python|perl|ruby|chmod|chown)\b",
+     "Shell command in backtick substitution detected"),
+    (r";\s*(cat|ls|rm|wget|curl|nc|bash|sh|python|perl|ruby|chmod|chown|whoami|id|uname|env)\b",
+     "Shell command injection via semicolon"),
+    (r"\|\s*(cat|ls|rm|wget|curl|nc|bash|sh|python|perl|ruby|chmod|chown|whoami|id|tee)\b",
+     "Shell command injection via pipe"),
 ]
 
 # ---- PII Detection Patterns ----
