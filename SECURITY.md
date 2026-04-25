@@ -49,3 +49,11 @@ See [THREAT_MODEL.md](THREAT_MODEL.md) for the full STRIDE analysis.
 
 ### Compliance Roadmap
 See [docs/compliance/](docs/compliance/) for current posture and roadmap.
+
+## Hall of Fame
+
+We gratefully acknowledge security researchers who have responsibly disclosed vulnerabilities to ThinkNEO. Thank you for helping keep our users safe.
+
+| Researcher | Date | Summary |
+|------------|------|---------|
+| *Be the first!* | — | Report a vulnerability to [security@thinkneo.ai](mailto:security@thinkneo.ai) |
