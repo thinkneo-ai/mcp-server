@@ -80,14 +80,10 @@ def register(mcp: FastMCP) -> None:
             )
 
         if not target.is_file():
-            # List available files to help the caller
-            available = sorted(
-                f.name for f in _MEMORY_DIR.glob("*.md") if f.name != ".git"
-            )
             return json.dumps(
                 {
                     "error": f"File not found: '{safe_name}'",
-                    "available_files": available,
+                    "hint": "Use thinkneo_read_memory without arguments to get the MEMORY.md index.",
                     "fetched_at": utcnow(),
                 },
                 indent=2,
