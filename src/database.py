@@ -24,7 +24,7 @@ _DB_HOST = os.getenv("MCP_DB_HOST", "172.17.0.1")
 _DB_PORT = int(os.getenv("MCP_DB_PORT", "5432"))
 _DB_NAME = os.getenv("MCP_DB_NAME", "thinkneo_mcp")
 _DB_USER = os.getenv("MCP_DB_USER", "mcp_user")
-_DB_PASSWORD = os.getenv("MCP_DB_PASSWORD", "mcp_thinkneo_2026")
+_DB_PASSWORD = os.getenv("MCP_DB_PASSWORD", "")
 
 _conninfo = f"host={_DB_HOST} port={_DB_PORT} dbname={_DB_NAME} user={_DB_USER} password={_DB_PASSWORD}"
 
