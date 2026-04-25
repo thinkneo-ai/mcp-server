@@ -1,4 +1,40 @@
 services:
+  redis:
+    image: redis:7-alpine
+    container_name: thinkneo-mcp-redis
+    user: "999:999"
+    command:
+      - redis-server
+      - --requirepass
+      - "${MCP_REDIS_PASSWORD}"
+      - --appendonly
+      - "yes"
+      - --maxmemory
+      - 128mb
+      - --maxmemory-policy
+      - allkeys-lru
+    volumes:
+      - mcp_redis_data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${MCP_REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256m
+        reservations:
+          cpus: "0.1"
+          memory: 32m
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
   thinkneo-mcp:
     build:
       context: .
@@ -22,6 +58,10 @@ services:
       MCP_DB_NAME: "thinkneo_mcp"
       MCP_DB_USER: "mcp_user"
       MCP_DB_PASSWORD: "${MCP_DB_PASSWORD}"
+      MCP_REDIS_URL: "redis://:${MCP_REDIS_PASSWORD}@redis:6379/0"
+    depends_on:
+      redis:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "python3", "-c",
         "import urllib.request; req = urllib.request.Request('http://127.0.0.1:8081/mcp', data=b'{\"jsonrpc\":\"2.0\",\"method\":\"initialize\",\"id\":1,\"params\":{\"protocolVersion\":\"2024-11-05\",\"capabilities\":{},\"clientInfo\":{\"name\":\"healthcheck\",\"version\":\"1.0\"}}}', headers={'Content-Type': 'application/json', 'Accept': 'application/json, text/event-stream'}, method='POST'); urllib.request.urlopen(req, timeout=4)"]
@@ -34,3 +74,6 @@ services:
       options:
         max-size: "50m"
         max-file: "5"
+
+volumes:
+  mcp_redis_data: {}
