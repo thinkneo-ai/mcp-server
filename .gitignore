@@ -12,3 +12,10 @@ docker-compose.yml.bak
 src/free_tier.py.pre-obs
 .bandit-baseline.json
 audit_*.log
+*.bak
+*.old
+*~
+*.backup
+*.swp
+.env.bak
+.env.old
