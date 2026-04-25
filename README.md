@@ -14,6 +14,7 @@
 [![Free Tier](https://img.shields.io/badge/Free_Tier-500_calls%2Fmo-brightgreen.svg)](#self-signup)
 [![Python SDK](https://img.shields.io/pypi/v/thinkneo.svg?label=Python%20SDK)](https://pypi.org/project/thinkneo/)
 [![TypeScript SDK](https://img.shields.io/npm/v/@thinkneo_ai/sdk.svg?label=TypeScript%20SDK)](https://www.npmjs.com/package/@thinkneo_ai/sdk)
+[![Provider Compat](https://github.com/thinkneo-ai/mcp-server/actions/workflows/provider_compat.yml/badge.svg)](https://github.com/thinkneo-ai/mcp-server/actions/workflows/provider_compat.yml)
 [![Glama](https://glama.ai/mcp/servers/ThinkneoAI/mcp-server/badge)](https://glama.ai/mcp/servers/ThinkneoAI/mcp-server)
 
 ---
