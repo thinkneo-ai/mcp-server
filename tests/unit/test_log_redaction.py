@@ -88,8 +88,8 @@ class TestSecretRedaction:
         assert "[REDACTED-SECRET-PRIVATE-KEY]" in result
 
     def test_resend_key_redacted(self):
-        result = redact("key = re_2bkq1dP9_LGjfTigkJcpyiphJ3jkct3NH")
-        assert "re_2bkq1dP9" not in result
+        result = redact("key = re_FAKE_TEST_KEY_NOT_REAL_00000000000")
+        assert "re_FAKE_TEST" not in result
         assert "[REDACTED-SECRET-" in result
 
 
