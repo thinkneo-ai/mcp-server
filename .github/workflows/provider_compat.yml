@@ -1,0 +1,92 @@
+name: Provider Compatibility
+
+on:
+  schedule:
+    - cron: '0 9 * * *'   # 09:00 UTC daily
+  workflow_dispatch:
+
+jobs:
+  anthropic:
+    name: Anthropic (Sonnet, Haiku, Opus)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install httpx pytest pytest-timeout
+      - name: Run Anthropic compat tests
+        run: pytest tests/compat/test_anthropic.py -v --timeout=60 -s
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY_COMPAT }}
+
+  openai:
+    name: OpenAI (GPT-4o, GPT-4o-mini, GPT-4.1)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install httpx pytest pytest-timeout
+      - name: Run OpenAI compat tests
+        run: pytest tests/compat/test_openai.py -v --timeout=60 -s
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY_COMPAT }}
+
+  google:
+    name: Google (Gemini 2.5 Flash, Pro)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install httpx pytest pytest-timeout
+      - name: Run Google compat tests
+        run: pytest tests/compat/test_google.py -v --timeout=60 -s
+        env:
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY_COMPAT }}
+
+  nvidia:
+    name: NVIDIA NIM (Nemotron)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install httpx pytest pytest-timeout
+      - name: Run NVIDIA compat tests
+        run: pytest tests/compat/test_nvidia.py -v --timeout=60 -s
+        env:
+          NVIDIA_API_KEY: ${{ secrets.NVIDIA_API_KEY_COMPAT }}
+
+  notify:
+    name: Notify on failure
+    runs-on: ubuntu-latest
+    needs: [anthropic, openai, google, nvidia]
+    if: failure()
+    permissions:
+      issues: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create failure issue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh issue create \
+            --repo thinkneo-ai/mcp-server \
+            --title "🔴 Provider compat failure — $(date -u +%Y-%m-%d)" \
+            --body "One or more provider compatibility tests failed on $(date -u '+%Y-%m-%d %H:%M UTC').
+
+          **Workflow run:** ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+          Check which provider failed and investigate:
+          - Model deprecated?
+          - API format changed?
+          - Rate limit hit?
+          - Temporary outage?
+
+          Close this issue after confirming resolution." \
+            --label "provider-compat-failure"
