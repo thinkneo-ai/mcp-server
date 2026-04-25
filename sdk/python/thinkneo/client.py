@@ -96,6 +96,29 @@ _RESPONSE_MODELS: dict[str, type] = {
 }
 
 
+def _parse_response(resp) -> dict:
+    """Parse an HTTP response that may be JSON or SSE (text/event-stream).
+
+    MCP Streamable HTTP transport returns SSE when the client accepts it.
+    SSE format: ``event: message\\ndata: {json}\\n\\n``
+    """
+    content_type = resp.headers.get("content-type", "")
+    body = resp.text
+
+    if "text/event-stream" in content_type or body.lstrip().startswith("event:"):
+        # Extract the last `data:` line from the SSE stream
+        last_data = None
+        for line in body.splitlines():
+            stripped = line.strip()
+            if stripped.startswith("data:"):
+                last_data = stripped[5:].strip()
+        if last_data:
+            return json.loads(last_data)
+        raise ThinkNEOError("Empty SSE response from server")
+
+    return resp.json()
+
+
 def _build_jsonrpc(method: str, params: dict) -> dict:
     return {
         "jsonrpc": "2.0",
@@ -181,7 +204,10 @@ class ThinkNEO:
         self._client = httpx.Client(timeout=timeout)
 
     def _headers(self) -> dict[str, str]:
-        h = {"Content-Type": "application/json"}
+        h = {
+            "Content-Type": "application/json",
+            "Accept": "application/json, text/event-stream",
+        }
         if self.api_key:
             h["Authorization"] = f"Bearer {self.api_key}"
         return h
@@ -209,7 +235,7 @@ class ThinkNEO:
                     raise ThinkNEOError(f"Server error {resp.status_code}", status_code=resp.status_code)
 
                 resp.raise_for_status()
-                data = resp.json()
+                data = _parse_response(resp)
 
                 if "error" in data:
                     err = data["error"]
@@ -535,6 +561,205 @@ class ThinkNEO:
         """Get installation config. No API key required."""
         return self._tool_call("thinkneo_registry_install", {"name": name, "client_type": client_type})
 
+
+    # --- All MCP tools + A2A skills (auto-generated) ---
+
+    def start_trace(self, agent_name: str, **kwargs) -> ToolResponse:
+        """Start an observability trace session."""
+        return self._tool_call("thinkneo_start_trace", {"agent_name": agent_name, **kwargs})
+
+    def log_event(self, session_id: str, event_type: str, **kwargs) -> ToolResponse:
+        """Log an event in a trace session."""
+        return self._tool_call("thinkneo_log_event", {"session_id": session_id, "event_type": event_type, **kwargs})
+
+    def end_trace(self, session_id: str, **kwargs) -> ToolResponse:
+        """End a trace session."""
+        return self._tool_call("thinkneo_end_trace", {"session_id": session_id, **kwargs})
+
+    def get_trace(self, session_id: str, **kwargs) -> ToolResponse:
+        """Get full trace with events."""
+        return self._tool_call("thinkneo_get_trace", {"session_id": session_id, **kwargs})
+
+    def get_observability_dashboard(self, **kwargs) -> ToolResponse:
+        """Observability dashboard metrics."""
+        return self._tool_call("thinkneo_get_observability_dashboard", {**kwargs})
+
+    def evaluate_trust_score(self, org_name: str, **kwargs) -> ToolResponse:
+        """Evaluate AI Trust Score (0-100)."""
+        return self._tool_call("thinkneo_evaluate_trust_score", {"org_name": org_name, **kwargs})
+
+    def get_trust_badge(self, report_token: str, **kwargs) -> ToolResponse:
+        """Get public trust score badge."""
+        return self._tool_call("thinkneo_get_trust_badge", {"report_token": report_token, **kwargs})
+
+    def set_baseline(self, process_name: str, cost_per_unit_usd: float, **kwargs) -> ToolResponse:
+        """Set pre-AI baseline metric."""
+        return self._tool_call("thinkneo_set_baseline", {"process_name": process_name, "cost_per_unit_usd": cost_per_unit_usd, **kwargs})
+
+    def log_decision(self, agent_name: str, decision_type: str, **kwargs) -> ToolResponse:
+        """Log an AI agent decision."""
+        return self._tool_call("thinkneo_log_decision", {"agent_name": agent_name, "decision_type": decision_type, **kwargs})
+
+    def decision_cost(self, **kwargs) -> ToolResponse:
+        """Calculate decision costs."""
+        return self._tool_call("thinkneo_decision_cost", {**kwargs})
+
+    def log_risk_avoidance(self, risk_type: str, **kwargs) -> ToolResponse:
+        """Log a risk avoided by AI."""
+        return self._tool_call("thinkneo_log_risk_avoidance", {"risk_type": risk_type, **kwargs})
+
+    def agent_roi(self, **kwargs) -> ToolResponse:
+        """ROI report for an agent."""
+        return self._tool_call("thinkneo_agent_roi", {**kwargs})
+
+    def business_impact(self, **kwargs) -> ToolResponse:
+        """Business impact report."""
+        return self._tool_call("thinkneo_business_impact", {**kwargs})
+
+    def detect_waste(self, **kwargs) -> ToolResponse:
+        """Detect waste patterns."""
+        return self._tool_call("thinkneo_detect_waste", {**kwargs})
+
+    def register_claim(self, action: str, target: str, evidence_type: str, **kwargs) -> ToolResponse:
+        """Register a verifiable claim."""
+        return self._tool_call("thinkneo_register_claim", {"action": action, "target": target, "evidence_type": evidence_type, **kwargs})
+
+    def verify_claim(self, claim_id: str, **kwargs) -> ToolResponse:
+        """Verify a claim by checking evidence."""
+        return self._tool_call("thinkneo_verify_claim", {"claim_id": claim_id, **kwargs})
+
+    def get_proof(self, claim_id: str, **kwargs) -> ToolResponse:
+        """Get proof chain for a claim."""
+        return self._tool_call("thinkneo_get_proof", {"claim_id": claim_id, **kwargs})
+
+    def verification_dashboard(self, **kwargs) -> ToolResponse:
+        """Claims verification dashboard."""
+        return self._tool_call("thinkneo_verification_dashboard", {**kwargs})
+
+    def policy_create(self, name: str, conditions: str, effect: str, **kwargs) -> ToolResponse:
+        """Create a governance policy."""
+        return self._tool_call("thinkneo_policy_create", {"name": name, "conditions": conditions, "effect": effect, **kwargs})
+
+    def policy_evaluate(self, context: str, **kwargs) -> ToolResponse:
+        """Evaluate action against policies."""
+        return self._tool_call("thinkneo_policy_evaluate", {"context": context, **kwargs})
+
+    def policy_list(self, **kwargs) -> ToolResponse:
+        """List all policies."""
+        return self._tool_call("thinkneo_policy_list", {**kwargs})
+
+    def policy_violations(self, **kwargs) -> ToolResponse:
+        """List policy violations."""
+        return self._tool_call("thinkneo_policy_violations", {**kwargs})
+
+    def compliance_generate(self, framework: str, **kwargs) -> ToolResponse:
+        """Generate compliance report."""
+        return self._tool_call("thinkneo_compliance_generate", {"framework": framework, **kwargs})
+
+    def compliance_list(self, **kwargs) -> ToolResponse:
+        """List compliance frameworks."""
+        return self._tool_call("thinkneo_compliance_list", {**kwargs})
+
+    def bridge_mcp_to_a2a(self, mcp_tool_name: str, **kwargs) -> ToolResponse:
+        """Bridge MCP tool to A2A task."""
+        return self._tool_call("thinkneo_bridge_mcp_to_a2a", {"mcp_tool_name": mcp_tool_name, **kwargs})
+
+    def bridge_a2a_to_mcp(self, a2a_task: str, **kwargs) -> ToolResponse:
+        """Bridge A2A task to MCP tool."""
+        return self._tool_call("thinkneo_bridge_a2a_to_mcp", {"a2a_task": a2a_task, **kwargs})
+
+    def bridge_generate_agent_card(self, **kwargs) -> ToolResponse:
+        """Generate A2A Agent Card."""
+        return self._tool_call("thinkneo_bridge_generate_agent_card", {**kwargs})
+
+    def bridge_list_mappings(self, **kwargs) -> ToolResponse:
+        """List MCP-A2A bridge mappings."""
+        return self._tool_call("thinkneo_bridge_list_mappings", {**kwargs})
+
+    def a2a_log(self, from_agent: str, to_agent: str, action: str, **kwargs) -> ToolResponse:
+        """Log A2A interaction."""
+        return self._tool_call("thinkneo_a2a_log", {"from_agent": from_agent, "to_agent": to_agent, "action": action, **kwargs})
+
+    def a2a_set_policy(self, from_agent: str, to_agent: str, **kwargs) -> ToolResponse:
+        """Set A2A communication policy."""
+        return self._tool_call("thinkneo_a2a_set_policy", {"from_agent": from_agent, "to_agent": to_agent, **kwargs})
+
+    def a2a_flow_map(self, **kwargs) -> ToolResponse:
+        """Visualize A2A communication flows."""
+        return self._tool_call("thinkneo_a2a_flow_map", {**kwargs})
+
+    def a2a_audit(self, **kwargs) -> ToolResponse:
+        """A2A interaction audit trail."""
+        return self._tool_call("thinkneo_a2a_audit", {**kwargs})
+
+    def benchmark_compare(self, task_type: str, **kwargs) -> ToolResponse:
+        """Compare model performance."""
+        return self._tool_call("thinkneo_benchmark_compare", {"task_type": task_type, **kwargs})
+
+    def benchmark_report(self, **kwargs) -> ToolResponse:
+        """Benchmark report."""
+        return self._tool_call("thinkneo_benchmark_report", {**kwargs})
+
+    def router_explain(self, task_type: str, **kwargs) -> ToolResponse:
+        """Explain Smart Router model choice."""
+        return self._tool_call("thinkneo_router_explain", {"task_type": task_type, **kwargs})
+
+    def sla_define(self, agent_name: str, metric: str, threshold: float, **kwargs) -> ToolResponse:
+        """Define an SLA."""
+        return self._tool_call("thinkneo_sla_define", {"agent_name": agent_name, "metric": metric, "threshold": threshold, **kwargs})
+
+    def sla_status(self, **kwargs) -> ToolResponse:
+        """SLA status overview."""
+        return self._tool_call("thinkneo_sla_status", {**kwargs})
+
+    def sla_dashboard(self, **kwargs) -> ToolResponse:
+        """SLA dashboard."""
+        return self._tool_call("thinkneo_sla_dashboard", {**kwargs})
+
+    def sla_breaches(self, **kwargs) -> ToolResponse:
+        """SLA breach history."""
+        return self._tool_call("thinkneo_sla_breaches", {**kwargs})
+
+    def registry_publish(self, name: str, display_name: str, description: str, endpoint_url: str, **kwargs) -> ToolResponse:
+        """Publish MCP server."""
+        return self._tool_call("thinkneo_registry_publish", {"name": name, "display_name": display_name, "description": description, "endpoint_url": endpoint_url, **kwargs})
+
+    def registry_review(self, name: str, rating: int, **kwargs) -> ToolResponse:
+        """Review MCP server."""
+        return self._tool_call("thinkneo_registry_review", {"name": name, "rating": rating, **kwargs})
+
+    def detect_secrets(self, code: str, **kwargs) -> ToolResponse:
+        """Scan code for hardcoded secrets."""
+        return self._tool_call("thinkneo_detect_secrets", {"code": code, **kwargs})
+
+    def detect_injection(self, text: str, **kwargs) -> ToolResponse:
+        """Detect prompt injection."""
+        return self._tool_call("thinkneo_detect_injection", {"text": text, **kwargs})
+
+    def compare_models(self, **kwargs) -> ToolResponse:
+        """Compare AI models."""
+        return self._tool_call("thinkneo_compare_models", {**kwargs})
+
+    def optimize_prompt(self, prompt: str, **kwargs) -> ToolResponse:
+        """Optimize prompt for fewer tokens."""
+        return self._tool_call("thinkneo_optimize_prompt", {"prompt": prompt, **kwargs})
+
+    def count_tokens(self, text: str, **kwargs) -> ToolResponse:
+        """Estimate token count."""
+        return self._tool_call("thinkneo_count_tokens", {"text": text, **kwargs})
+
+    def detect_pii(self, text: str, **kwargs) -> ToolResponse:
+        """Detect PII across jurisdictions."""
+        return self._tool_call("thinkneo_detect_pii", {"text": text, **kwargs})
+
+    def cache_prompt(self, key: str, **kwargs) -> ToolResponse:
+        """Cache a prompt result."""
+        return self._tool_call("thinkneo_cache_prompt", {"key": key, **kwargs})
+
+    def rotate_key(self, **kwargs) -> ToolResponse:
+        """Rotate API key."""
+        return self._tool_call("thinkneo_rotate_key", {**kwargs})
+
     # ------------------------------------------------------------------
     # Lifecycle
     # ------------------------------------------------------------------
@@ -586,7 +811,10 @@ class AsyncThinkNEO:
         self._client = httpx.AsyncClient(timeout=timeout)
 
     def _headers(self) -> dict[str, str]:
-        h = {"Content-Type": "application/json"}
+        h = {
+            "Content-Type": "application/json",
+            "Accept": "application/json, text/event-stream",
+        }
         if self.api_key:
             h["Authorization"] = f"Bearer {self.api_key}"
         return h
@@ -616,7 +844,7 @@ class AsyncThinkNEO:
                     raise ThinkNEOError(f"Server error {resp.status_code}", status_code=resp.status_code)
 
                 resp.raise_for_status()
-                data = resp.json()
+                data = _parse_response(resp)
 
                 if "error" in data:
                     err = data["error"]
@@ -712,7 +940,157 @@ class AsyncThinkNEO:
         return await self._tool_call("thinkneo_registry_install", {"name": name, "client_type": client_type})
 
     # Lifecycle
+
+    # --- Auto-generated async methods ---
+    async def start_trace(self, agent_name: str, **kwargs) -> ToolResponse:
+        return await self._tool_call("thinkneo_start_trace", {"agent_name": agent_name, **kwargs})
+
+    async def log_event(self, session_id: str, event_type: str, **kwargs) -> ToolResponse:
+        return await self._tool_call("thinkneo_log_event", {"session_id": session_id, "event_type": event_type, **kwargs})
+
+    async def end_trace(self, session_id: str, **kwargs) -> ToolResponse:
+        return await self._tool_call("thinkneo_end_trace", {"session_id": session_id, **kwargs})
+
+    async def get_trace(self, session_id: str, **kwargs) -> ToolResponse:
+        return await self._tool_call("thinkneo_get_trace", {"session_id": session_id, **kwargs})
+
+    async def get_observability_dashboard(self, **kwargs) -> ToolResponse:
+        return await self._tool_call("thinkneo_get_observability_dashboard", {**kwargs})
+
+    async def evaluate_trust_score(self, org_name: str, **kwargs) -> ToolResponse:
+        return await self._tool_call("thinkneo_evaluate_trust_score", {"org_name": org_name, **kwargs})
+
+    async def get_trust_badge(self, report_token: str, **kwargs) -> ToolResponse:
+        return await self._tool_call("thinkneo_get_trust_badge", {"report_token": report_token, **kwargs})
+
+    async def set_baseline(self, process_name: str, cost_per_unit_usd: float, **kwargs) -> ToolResponse:
+        return await self._tool_call("thinkneo_set_baseline", {"process_name": process_name, "cost_per_unit_usd": cost_per_unit_usd, **kwargs})
+
+    async def log_decision(self, agent_name: str, decision_type: str, **kwargs) -> ToolResponse:
+        return await self._tool_call("thinkneo_log_decision", {"agent_name": agent_name, "decision_type": decision_type, **kwargs})
+
+    async def decision_cost(self, **kwargs) -> ToolResponse:
+        return await self._tool_call("thinkneo_decision_cost", {**kwargs})
+
+    async def log_risk_avoidance(self, risk_type: str, **kwargs) -> ToolResponse:
+        return await self._tool_call("thinkneo_log_risk_avoidance", {"risk_type": risk_type, **kwargs})
+
+    async def agent_roi(self, **kwargs) -> ToolResponse:
+        return await self._tool_call("thinkneo_agent_roi", {**kwargs})
+
+    async def business_impact(self, **kwargs) -> ToolResponse:
+        return await self._tool_call("thinkneo_business_impact", {**kwargs})
+
+    async def detect_waste(self, **kwargs) -> ToolResponse:
+        return await self._tool_call("thinkneo_detect_waste", {**kwargs})
+
+    async def register_claim(self, action: str, target: str, evidence_type: str, **kwargs) -> ToolResponse:
+        return await self._tool_call("thinkneo_register_claim", {"action": action, "target": target, "evidence_type": evidence_type, **kwargs})
+
+    async def verify_claim(self, claim_id: str, **kwargs) -> ToolResponse:
+        return await self._tool_call("thinkneo_verify_claim", {"claim_id": claim_id, **kwargs})
+
+    async def get_proof(self, claim_id: str, **kwargs) -> ToolResponse:
+        return await self._tool_call("thinkneo_get_proof", {"claim_id": claim_id, **kwargs})
+
+    async def verification_dashboard(self, **kwargs) -> ToolResponse:
+        return await self._tool_call("thinkneo_verification_dashboard", {**kwargs})
+
+    async def policy_create(self, name: str, conditions: str, effect: str, **kwargs) -> ToolResponse:
+        return await self._tool_call("thinkneo_policy_create", {"name": name, "conditions": conditions, "effect": effect, **kwargs})
+
+    async def policy_evaluate(self, context: str, **kwargs) -> ToolResponse:
+        return await self._tool_call("thinkneo_policy_evaluate", {"context": context, **kwargs})
+
+    async def policy_list(self, **kwargs) -> ToolResponse:
+        return await self._tool_call("thinkneo_policy_list", {**kwargs})
+
+    async def policy_violations(self, **kwargs) -> ToolResponse:
+        return await self._tool_call("thinkneo_policy_violations", {**kwargs})
+
+    async def compliance_generate(self, framework: str, **kwargs) -> ToolResponse:
+        return await self._tool_call("thinkneo_compliance_generate", {"framework": framework, **kwargs})
+
+    async def compliance_list(self, **kwargs) -> ToolResponse:
+        return await self._tool_call("thinkneo_compliance_list", {**kwargs})
+
+    async def bridge_mcp_to_a2a(self, mcp_tool_name: str, **kwargs) -> ToolResponse:
+        return await self._tool_call("thinkneo_bridge_mcp_to_a2a", {"mcp_tool_name": mcp_tool_name, **kwargs})
+
+    async def bridge_a2a_to_mcp(self, a2a_task: str, **kwargs) -> ToolResponse:
+        return await self._tool_call("thinkneo_bridge_a2a_to_mcp", {"a2a_task": a2a_task, **kwargs})
+
+    async def bridge_generate_agent_card(self, **kwargs) -> ToolResponse:
+        return await self._tool_call("thinkneo_bridge_generate_agent_card", {**kwargs})
+
+    async def bridge_list_mappings(self, **kwargs) -> ToolResponse:
+        return await self._tool_call("thinkneo_bridge_list_mappings", {**kwargs})
+
+    async def a2a_log(self, from_agent: str, to_agent: str, action: str, **kwargs) -> ToolResponse:
+        return await self._tool_call("thinkneo_a2a_log", {"from_agent": from_agent, "to_agent": to_agent, "action": action, **kwargs})
+
+    async def a2a_set_policy(self, from_agent: str, to_agent: str, **kwargs) -> ToolResponse:
+        return await self._tool_call("thinkneo_a2a_set_policy", {"from_agent": from_agent, "to_agent": to_agent, **kwargs})
+
+    async def a2a_flow_map(self, **kwargs) -> ToolResponse:
+        return await self._tool_call("thinkneo_a2a_flow_map", {**kwargs})
+
+    async def a2a_audit(self, **kwargs) -> ToolResponse:
+        return await self._tool_call("thinkneo_a2a_audit", {**kwargs})
+
+    async def benchmark_compare(self, task_type: str, **kwargs) -> ToolResponse:
+        return await self._tool_call("thinkneo_benchmark_compare", {"task_type": task_type, **kwargs})
+
+    async def benchmark_report(self, **kwargs) -> ToolResponse:
+        return await self._tool_call("thinkneo_benchmark_report", {**kwargs})
+
+    async def router_explain(self, task_type: str, **kwargs) -> ToolResponse:
+        return await self._tool_call("thinkneo_router_explain", {"task_type": task_type, **kwargs})
+
+    async def sla_define(self, agent_name: str, metric: str, threshold: float, **kwargs) -> ToolResponse:
+        return await self._tool_call("thinkneo_sla_define", {"agent_name": agent_name, "metric": metric, "threshold": threshold, **kwargs})
+
+    async def sla_status(self, **kwargs) -> ToolResponse:
+        return await self._tool_call("thinkneo_sla_status", {**kwargs})
+
+    async def sla_dashboard(self, **kwargs) -> ToolResponse:
+        return await self._tool_call("thinkneo_sla_dashboard", {**kwargs})
+
+    async def sla_breaches(self, **kwargs) -> ToolResponse:
+        return await self._tool_call("thinkneo_sla_breaches", {**kwargs})
+
+    async def registry_publish(self, name: str, display_name: str, description: str, endpoint_url: str, **kwargs) -> ToolResponse:
+        return await self._tool_call("thinkneo_registry_publish", {"name": name, "display_name": display_name, "description": description, "endpoint_url": endpoint_url, **kwargs})
+
+    async def registry_review(self, name: str, rating: int, **kwargs) -> ToolResponse:
+        return await self._tool_call("thinkneo_registry_review", {"name": name, "rating": rating, **kwargs})
+
+    async def detect_secrets(self, code: str, **kwargs) -> ToolResponse:
+        return await self._tool_call("thinkneo_detect_secrets", {"code": code, **kwargs})
+
+    async def detect_injection(self, text: str, **kwargs) -> ToolResponse:
+        return await self._tool_call("thinkneo_detect_injection", {"text": text, **kwargs})
+
+    async def compare_models(self, **kwargs) -> ToolResponse:
+        return await self._tool_call("thinkneo_compare_models", {**kwargs})
+
+    async def optimize_prompt(self, prompt: str, **kwargs) -> ToolResponse:
+        return await self._tool_call("thinkneo_optimize_prompt", {"prompt": prompt, **kwargs})
+
+    async def count_tokens(self, text: str, **kwargs) -> ToolResponse:
+        return await self._tool_call("thinkneo_count_tokens", {"text": text, **kwargs})
+
+    async def detect_pii(self, text: str, **kwargs) -> ToolResponse:
+        return await self._tool_call("thinkneo_detect_pii", {"text": text, **kwargs})
+
+    async def cache_prompt(self, key: str, **kwargs) -> ToolResponse:
+        return await self._tool_call("thinkneo_cache_prompt", {"key": key, **kwargs})
+
+    async def rotate_key(self, **kwargs) -> ToolResponse:
+        return await self._tool_call("thinkneo_rotate_key", {**kwargs})
+
     async def close(self) -> None:
+        """Close the HTTP client."""
         await self._client.aclose()
 
     async def __aenter__(self):
