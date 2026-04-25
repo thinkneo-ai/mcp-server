@@ -29,7 +29,7 @@ def register(mcp: FastMCP) -> None:
             "Supports optional HMAC SHA-256 signing for integrity verification. "
             "Filter by period, event type, and workspace. Requires authentication."
         ),
-        annotations=ToolAnnotations(readOnlyHint=True, idempotentHint=True),
+        annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False),
     )
     def thinkneo_audit_export(
         format: Annotated[str, Field(description=f"Output format: {', '.join(sorted(FORMATTERS.keys()))}")] = "json",
@@ -68,7 +68,7 @@ def register(mcp: FastMCP) -> None:
             "Elasticsearch, or generic webhook). Validates endpoint URL for SSRF safety. "
             "Requires authentication."
         ),
-        annotations=ToolAnnotations(readOnlyHint=False, idempotentHint=True),
+        annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=True, idempotentHint=True, openWorldHint=False),
     )
     def thinkneo_set_audit_export(
         integration: Annotated[str, Field(description="Integration type: splunk, elastic, webhook")],
@@ -125,7 +125,7 @@ def register(mcp: FastMCP) -> None:
             "Shows integration type, endpoint, enabled status, and recent export history. "
             "Requires authentication."
         ),
-        annotations=ToolAnnotations(readOnlyHint=True, idempotentHint=True),
+        annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False),
     )
     def thinkneo_audit_export_status() -> str:
         token = require_auth()

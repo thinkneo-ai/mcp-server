@@ -26,7 +26,7 @@ def register(mcp: FastMCP) -> None:
             "and see estimated monthly and annual savings with a recommended model mix. "
             "No authentication required — try it now!"
         ),
-        annotations=ToolAnnotations(readOnlyHint=True, idempotentHint=True),
+        annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False),
     )
     def thinkneo_simulate_savings(
         monthly_ai_spend: Annotated[float, Field(

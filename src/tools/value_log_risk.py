@@ -34,7 +34,7 @@ def register(mcp: FastMCP) -> None:
             "policy violation caught before production. "
             "If estimated_impact_usd is not provided, a default is calculated from severity."
         ),
-        annotations=ToolAnnotations(readOnlyHint=False, idempotentHint=False),
+        annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=True, idempotentHint=False, openWorldHint=False),
     )
     def thinkneo_log_risk_avoidance(
         risk_type: Annotated[str, Field(description="Type: 'pii_leak', 'injection_blocked', 'policy_violation', 'spend_limit', 'compliance_breach', 'data_exfiltration'")],

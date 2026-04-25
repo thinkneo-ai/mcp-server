@@ -35,7 +35,7 @@ def register(mcp: FastMCP) -> None:
             "based on verified outcomes, not static estimates. Shows verification rates, sample counts, "
             "and rankings. Requires authentication."
         ),
-        annotations=ToolAnnotations(readOnlyHint=True, idempotentHint=True),
+        annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False),
     )
     def thinkneo_benchmark_report(
         task_type: Annotated[Optional[str], Field(
@@ -54,7 +54,7 @@ def register(mcp: FastMCP) -> None:
             "verification rates, and rankings based on real outcomes. "
             "Requires authentication."
         ),
-        annotations=ToolAnnotations(readOnlyHint=True, idempotentHint=True),
+        annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False),
     )
     def thinkneo_benchmark_compare(
         task_type: Annotated[str, Field(
@@ -80,7 +80,7 @@ def register(mcp: FastMCP) -> None:
             "and explains the reasoning behind the recommendation. "
             "Requires authentication."
         ),
-        annotations=ToolAnnotations(readOnlyHint=True, idempotentHint=True),
+        annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False),
     )
     def thinkneo_router_explain(
         task_type: Annotated[str, Field(

@@ -172,7 +172,7 @@ def register(mcp: FastMCP) -> None:
             "Use this BEFORE passing untrusted text to an LLM. "
             "No authentication required."
         ),
-        annotations=ToolAnnotations(readOnlyHint=True, idempotentHint=True),
+        annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False),
     )
     def thinkneo_detect_injection(
         text: Annotated[str, Field(description="Text to scan for prompt injection (max 50,000 chars)")],

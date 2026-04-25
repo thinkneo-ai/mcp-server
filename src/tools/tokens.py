@@ -83,7 +83,7 @@ def register(mcp: FastMCP) -> None:
             "Useful for: budgeting before a large batch job, comparing models by workload, "
             "context window planning. No authentication required."
         ),
-        annotations=ToolAnnotations(readOnlyHint=True, idempotentHint=True),
+        annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False),
     )
     def thinkneo_estimate_tokens(
         text: Annotated[str, Field(description="Text to estimate tokens for")],

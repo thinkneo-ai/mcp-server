@@ -31,7 +31,7 @@ def register(mcp: FastMCP) -> None:
             "Collects contact information and preferences. "
             "No authentication required."
         ),
-        annotations=ToolAnnotations(readOnlyHint=False, idempotentHint=False),
+        annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=True, idempotentHint=False, openWorldHint=True),
     )
     def thinkneo_schedule_demo(
         contact_name: Annotated[str, Field(description="Full name of the person requesting the demo")],

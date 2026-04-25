@@ -35,7 +35,7 @@ def register(mcp: FastMCP) -> None:
             "savings percentage, breakdown by task type, and model distribution. "
             "Requires authentication."
         ),
-        annotations=ToolAnnotations(readOnlyHint=True, idempotentHint=True),
+        annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False),
     )
     def thinkneo_get_savings_report(
         period: Annotated[str, Field(

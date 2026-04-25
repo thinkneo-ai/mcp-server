@@ -36,7 +36,7 @@ def register(mcp: FastMCP) -> None:
             "Returns name, description, tools count, rating, downloads, and verified badge. "
             "No authentication required."
         ),
-        annotations=ToolAnnotations(readOnlyHint=True, idempotentHint=True),
+        annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False),
     )
     def thinkneo_registry_search(
         query: Annotated[str, Field(description="Search query — matches name, description, tags, and tool names")] = "",
@@ -90,7 +90,7 @@ def register(mcp: FastMCP) -> None:
             "Returns readme, full tools list, version history, reviews, security score, "
             "and installation instructions. No authentication required."
         ),
-        annotations=ToolAnnotations(readOnlyHint=True, idempotentHint=True),
+        annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False),
     )
     def thinkneo_registry_get(
         name: Annotated[str, Field(description="Package name (e.g. 'thinkneo-control-plane', 'filesystem', 'github')")],
@@ -123,7 +123,7 @@ def register(mcp: FastMCP) -> None:
             "(secrets detection, injection patterns), and stores the entry. "
             "Authentication required."
         ),
-        annotations=ToolAnnotations(readOnlyHint=False, idempotentHint=False),
+        annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=True, idempotentHint=False, openWorldHint=True),
     )
     def thinkneo_registry_publish(
         name: Annotated[str, Field(description="Package name (lowercase, hyphens allowed, e.g. 'my-mcp-server')")],
@@ -176,7 +176,7 @@ def register(mcp: FastMCP) -> None:
             "One review per user per package (updates on repeat). "
             "Authentication required."
         ),
-        annotations=ToolAnnotations(readOnlyHint=False, idempotentHint=True),
+        annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=True, idempotentHint=True, openWorldHint=False),
     )
     def thinkneo_registry_review(
         name: Annotated[str, Field(description="Package name to review")],
@@ -203,7 +203,7 @@ def register(mcp: FastMCP) -> None:
             "Returns ready-to-use JSON config for Claude Desktop, Cursor, Windsurf, or custom clients. "
             "Tracks the download. No authentication required."
         ),
-        annotations=ToolAnnotations(readOnlyHint=False, idempotentHint=False),
+        annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=True, idempotentHint=False, openWorldHint=False),
     )
     def thinkneo_registry_install(
         name: Annotated[str, Field(description="Package name to install (e.g. 'thinkneo-control-plane')")],
