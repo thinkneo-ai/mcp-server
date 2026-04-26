@@ -40,6 +40,16 @@ from .compliance_export import register as register_compliance_export
 from .audit_export import register as register_audit_export
 from .agent_sla import register as register_agent_sla
 
+# v2.0.0 orphan tools — discovered via GAP analysis v3.13.0 (2026-04-26)
+from .cache import register as register_cache
+from .compare_models import register as register_compare_models
+from .injection import register as register_injection
+from .optimize_prompt import register as register_optimize_prompt
+from .pii_intl import register as register_pii_intl
+from .rotate_key import register as register_rotate_key
+from .secrets import register as register_secrets
+from .tokens import register as register_tokens
+
 logger = logging.getLogger(__name__)
 
 
@@ -102,6 +112,16 @@ def register_all(mcp) -> None:
 
     # SIEM Audit Export — CEF, LEEF, syslog, JSON, CSV (2026-04-25)
     register_audit_export(mcp)
+
+    # v2.0.0 orphan tools — registered in v3.13.0 after GAP analysis (2026-04-26)
+    register_cache(mcp)
+    register_compare_models(mcp)
+    register_injection(mcp)
+    register_optimize_prompt(mcp)
+    register_pii_intl(mcp)
+    register_rotate_key(mcp)
+    register_secrets(mcp)
+    register_tokens(mcp)
 
     # After all tools are registered, wrap each tool's function
     # to integrate free-tier checking and usage footer injection.
