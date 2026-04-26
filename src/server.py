@@ -23,6 +23,7 @@ from starlette.routing import Route
 
 from .auth import BearerTokenMiddleware
 from .capabilities import register_prompts, register_resources
+from .logging_capability import register_logging
 from .config import get_settings
 from .agent_card import AgentCardMiddleware
 from .badge import BadgeMiddleware
@@ -99,10 +100,11 @@ mcp = FastMCP(
     log_level=settings.log_level,
 )
 
-# Register all tools, prompts, and resources
+# Register all tools, prompts, resources, and logging capability
 register_all(mcp)
 register_prompts(mcp)
 register_resources(mcp)
+register_logging(mcp)
 
 logger.info(
     "ThinkNEO MCP Server configured: %d tools, 2 prompts, 2 resources, auth_required=%s",
