@@ -33,7 +33,7 @@ class TestPropertyBased:
         r"[Ii]gnore\b.{0,30}\b(previous|prior|above|all|earlier)\b.{0,30}\binstructions?",
         fullmatch=False
     ))
-    @settings(max_examples=50, suppress_health_check=[HealthCheck.function_scoped_fixture])
+    @settings(max_examples=50, suppress_health_check=[HealthCheck.function_scoped_fixture, HealthCheck.too_slow, HealthCheck.filter_too_much])
     def test_detects_generated_ignore_patterns(self, check_fn, text):
         """Generated 'ignore...instructions' patterns should be detected."""
         result = json.loads(check_fn(text=text))
