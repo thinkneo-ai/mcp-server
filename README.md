@@ -57,7 +57,7 @@ For authenticated tools: `./scripts/audit_live.sh --bearer YOUR_API_KEY`
 |-----------|-------|
 | MCP Protocol | `2024-11-05` (Streamable HTTP) |
 | A2A Protocol | `v0.3.0` (Google / Linux Foundation) |
-| MCP Tools | 62 |
+| MCP Tools | 72 |
 | A2A Skills | 24 |
 | A2A TCK Compliance | **82/82 intentional** (80 passing + 2 documented opt-outs) — [see report](TCK_REPORT.md) |
 | Internal Tests | 159/159 passing |
@@ -270,7 +270,7 @@ This gateway implements the A2A Protocol v0.3.0 specification maintained by the 
 
 **Current status: 80/82 passing + 2 documented opt-outs = 82/82 intentional compliance**
 
-The 2 failing tests are in the `optional_capability` category -- features marked as optional in the specification that are deliberately not implemented. See [TCK_REPORT.md](TCK_REPORT.md) for the detailed breakdown, including the specific test cases that fail and rationale for each.
+The 2 failing tests are in the `optional_capability` category -- features marked as optional in the specification that are deliberately not implemented. See [TCK_REPORT.md](TCK_REPORT.md) for the detailed breakdown, and [docs/compliance/a2a-opt-outs.md](docs/compliance/a2a-opt-outs.md) for enterprise-facing rationale for each opt-out decision.
 
 ---
 
