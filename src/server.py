@@ -55,6 +55,8 @@ logger = logging.getLogger(__name__)
 # FastMCP instance
 # ---------------------------------------------------------------------------
 
+SERVER_VERSION = "1.28.0"
+
 mcp = FastMCP(
     name="ThinkNEO Control Plane",
     instructions=(
@@ -100,6 +102,9 @@ mcp = FastMCP(
     port=settings.port,
     log_level=settings.log_level,
 )
+
+# Set server version for initialize response
+mcp._mcp_server.version = SERVER_VERSION
 
 # Register all tools, prompts, resources, logging, and completions
 register_all(mcp)
