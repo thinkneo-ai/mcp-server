@@ -20,6 +20,23 @@
 
 ---
 
+## MCP Spec Compliance
+
+**Complete Model Context Protocol 2024-11-05 implementation. Forward-compatible with MCP 2025-03-26.**
+
+| Capability | Status | Details |
+|------------|--------|---------|
+| tools | 62 tools, full annotations | destructiveHint, readOnlyHint, idempotentHint, openWorldHint |
+| resources | 2 resources | Getting Started guide, Supported Providers |
+| prompts | 2 prompts with completions | governance_audit, policy_preflight |
+| logging | logging/setLevel | 8 levels, per-session, audit trail |
+| completions | completion/complete | workspace (auth-scoped), provider, model (provider-aware) |
+| experimental | reserved | |
+
+Validated externally on 2026-04-26. See [docs/protocol/COMPLIANCE.md](docs/protocol/COMPLIANCE.md) for full method-by-method evidence.
+
+---
+
 ## Audit this gateway yourself
 
 Run the live audit script from any machine with `curl` and `python3`:
