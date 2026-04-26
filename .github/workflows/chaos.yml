@@ -7,39 +7,45 @@ on:
 
 jobs:
   chaos:
-    name: Chaos Engineering (5 scenarios)
+    name: "Chaos Engineering (5 scenarios, 27 tests)"
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: pip install httpx pytest pytest-timeout
 
-      - name: Start chaos stack
+      - name: Install test dependencies
+        run: pip install httpx pytest pytest-timeout
+
+      - name: Start chaos stack (5 containers)
         run: docker compose -f tests/chaos/docker-compose-chaos.yml up -d --build
 
       - name: Wait for stack health
         run: |
-          echo "Waiting for gateway..."
+          echo "::group::Waiting for gateway"
           for i in $(seq 1 90); do
-            curl -sf http://localhost:18081/mcp/docs > /dev/null 2>&1 && break || sleep 2
+            curl -sf http://localhost:18081/mcp/docs > /dev/null 2>&1 && echo "Gateway ready" && break || sleep 2
           done
-          echo "Waiting for toxiproxy..."
+          echo "::endgroup::"
+          echo "::group::Waiting for toxiproxy"
           for i in $(seq 1 30); do
-            curl -sf http://localhost:8474/proxies > /dev/null 2>&1 && break || sleep 2
+            curl -sf http://localhost:8474/proxies > /dev/null 2>&1 && echo "Toxiproxy ready" && break || sleep 2
           done
-          echo "Waiting for wiremock..."
+          echo "::endgroup::"
+          echo "::group::Waiting for wiremock"
           for i in $(seq 1 30); do
-            curl -sf http://localhost:18089/__admin/mappings > /dev/null 2>&1 && break || sleep 2
+            curl -sf http://localhost:18089/__admin/mappings > /dev/null 2>&1 && echo "WireMock ready" && break || sleep 2
           done
-          echo "Stack ready."
+          echo "::endgroup::"
+          echo "All 5 containers ready."
 
       - name: Run chaos tests
-        run: pytest tests/chaos/ -v --timeout=180 -s
+        run: pytest tests/chaos/ -v --timeout=180 -s --tb=short
 
-      - name: Collect logs
+      - name: Collect container logs
         if: always()
         run: docker compose -f tests/chaos/docker-compose-chaos.yml logs > chaos-logs.txt 2>&1
 
@@ -65,11 +71,16 @@ jobs:
       - env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh issue create --repo thinkneo-ai/mcp-server \
+          gh issue create --repo ${{ github.repository }} \
             --title "Chaos test failure — $(date -u +%Y-%m-%d)" \
-            --body "Chaos engineering tests failed on $(date -u '+%Y-%m-%d %H:%M UTC').
+            --body "$(cat <<'BODY'
+          Chaos engineering tests failed on $(date -u '+%Y-%m-%d %H:%M UTC').
 
+          **Scenarios:** PostgreSQL down, Redis down, Provider timeout, Provider 429, High latency
           **Run:** ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
 
-          Review the chaos-logs artifact for details." \
+          Review the `chaos-logs` artifact for container logs.
+          See `docs/reliability/runbook.md` for remediation procedures.
+          BODY
+          )" \
             --label "chaos-failure"

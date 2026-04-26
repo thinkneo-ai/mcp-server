@@ -1,5 +1,6 @@
 # Chaos Engineering — isolated test stack
 # Port 18081 to avoid conflict with production
+# Network: all containers on isolated `chaos-net`
 
 services:
   gateway:
@@ -17,12 +18,24 @@ services:
       MCP_DB_NAME: "thinkneo_mcp_chaos"
       MCP_DB_USER: "mcp_user"
       MCP_DB_PASSWORD: "chaos_test_pw"
+      MCP_REDIS_URL: "redis://redis:6379/0"
       THINKNEO_API_KEY: "chaos-test-key"
       OTEL_ENABLED: "false"
       LOG_REDACTION: "true"
+      LOG_LEVEL: "DEBUG"
     depends_on:
       postgres:
         condition: service_healthy
+      redis:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8081/mcp/docs')"]
+      interval: 10s
+      timeout: 5s
+      start_period: 15s
+      retries: 5
+    networks:
+      - chaos-net
 
   postgres:
     image: postgres:16-alpine
@@ -36,10 +49,19 @@ services:
       interval: 5s
       timeout: 3s
       retries: 5
+    networks:
+      - chaos-net
 
   redis:
     image: redis:7-alpine
     container_name: thinkneo-chaos-redis
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - chaos-net
 
   toxiproxy:
     image: ghcr.io/shopify/toxiproxy:2.9.0
@@ -47,7 +69,9 @@ services:
     ports:
       - "8474:8474"     # API
       - "15432:15432"   # PG proxy
-      - "18080:18080"   # Provider proxy
+      - "18082:18082"   # Provider proxy
+    networks:
+      - chaos-net
 
   wiremock:
     image: wiremock/wiremock:3.5.4
@@ -55,3 +79,9 @@ services:
     ports:
       - "18089:8080"
     command: ["--verbose"]
+    networks:
+      - chaos-net
+
+networks:
+  chaos-net:
+    driver: bridge
