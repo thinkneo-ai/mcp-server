@@ -39,6 +39,7 @@ def register(mcp: FastMCP) -> None:
         workspace: Annotated[str, Field(description="Workspace identifier")] = "default",
         metadata: Annotated[Optional[str], Field(description="JSON string with additional context")] = None,
     ) -> str:
+        """Log an agent-to-agent interaction. Tracks which agent called which, what action was performed, the cost, outcome, and latency."""
         token = require_auth()
         key_h = hash_key(token)
         validate_workspace(workspace)

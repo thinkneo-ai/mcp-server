@@ -43,6 +43,7 @@ def register(mcp: FastMCP) -> None:
             ),
         ] = None,
     ) -> str:
+        """Read Claude Code project memory files. Without arguments, returns the MEMORY.md index listing all available memories. With a filename argument, returns the full content of that specific memory file. Use this to access project context, user preferences, feedback, and reference notes"""
         if not _MEMORY_DIR.is_dir():
             return json.dumps(
                 {

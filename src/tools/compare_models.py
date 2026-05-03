@@ -180,6 +180,7 @@ def register(mcp: FastMCP) -> None:
         estimate_input_tokens: Annotated[Optional[int], Field(description="For cost estimation: number of input tokens")] = None,
         estimate_output_tokens: Annotated[Optional[int], Field(description="For cost estimation: number of output tokens")] = None,
     ) -> str:
+        """Compare 25+ LLM models across 8 major providers (OpenAI, Anthropic, Google, Meta, Mistral, xAI, DeepSeek, Cohere, NVIDIA) by price, context window, capabilities, and modalities. Optionally estimate cost for a specific workload (input/output token counts). Filter by use case (coding, reasoning, vision, long context, cheap, agentic, multilingual, EU compliant, real-time, open source)."""
         matches = _filter_catalog(use_case, max_input_price_per_m, min_context, providers, modalities)
 
         # Sort by value: (input + output)/2 ascending

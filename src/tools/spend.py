@@ -34,6 +34,7 @@ def register(mcp: FastMCP) -> None:
         start_date: Annotated[Optional[str], Field(description="Start date for a custom period in ISO format (YYYY-MM-DD). Only used when period='custom'")] = None,
         end_date: Annotated[Optional[str], Field(description="End date for a custom period in ISO format (YYYY-MM-DD). Only used when period='custom'")] = None,
     ) -> str:
+        """Check AI spend summary for a workspace, team, or project. Returns cost breakdown by provider, model, and time period."""
         require_auth()
         workspace = validate_workspace(workspace)
 

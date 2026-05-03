@@ -178,6 +178,7 @@ def register(mcp: FastMCP) -> None:
     def thinkneo_optimize_prompt(
         prompt: Annotated[str, Field(description="The prompt text to optimize (max 20,000 chars)")],
     ) -> str:
+        """Optimize an LLM prompt for clarity, conciseness, and token efficiency. Detects: filler words, verbose phrases, hedging language, repeated content, missing structure (output format, role, constraints), and excessive politeness. Returns suggestions + an automatically rewritten concise version with estimated token savings."""
         text = prompt[:20_000]
         original_tokens = _estimate_tokens(text)
 

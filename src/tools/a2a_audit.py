@@ -37,6 +37,7 @@ def register(mcp: FastMCP) -> None:
         hours: Annotated[int, Field(description="Lookback window in hours")] = 24,
         limit: Annotated[int, Field(description="Maximum number of records")] = 50,
     ) -> str:
+        """Full audit trail of agent-to-agent interactions. Shows every delegation, data request, escalation, and approval between agents with timestamps, costs, and outcomes. Supports filtering by agent, action, outcome, and time window."""
         token = require_auth()
         key_h = hash_key(token)
         validate_workspace(workspace)

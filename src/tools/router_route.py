@@ -67,6 +67,7 @@ def register(mcp: FastMCP) -> None:
             )
         )] = None,
     ) -> str:
+        """AI Smart Router — find the cheapest model that meets your quality threshold. Specify your task type and quality requirements, and ThinkNEO will recommend the optimal model with estimated cost and savings vs premium models. Supports 17+ models across Anthropic, OpenAI, Google, Meta, Mistral, DeepSeek,"""
         token = require_auth()
         key_h = hash_key(token)
 

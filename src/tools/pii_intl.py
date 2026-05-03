@@ -162,6 +162,7 @@ def register(mcp: FastMCP) -> None:
         text: Annotated[str, Field(description="Text to scan for PII (max 100,000 chars)")],
         countries: Annotated[List[str], Field(description="Filter by country codes (BR, US, UK, CA, EU, DE, FR, ES, IT, AR, MX, AU, IN, CN, JP, INTL). Empty = all.")] = [],
     ) -> str:
+        """Detect international PII across 30+ document types from 15+ countries: Brazil (CPF, CNPJ, RG, PIS), USA (SSN, EIN, ITIN, Passport), UK (NINO, UTR), Canada (SIN), EU (IBAN, VAT), Germany (Tax-ID), France (INSEE), Spain (DNI/NIE), Italy (Codice Fiscale), Argentina (CUIT), Mexico (CURP/RFC), Australia (TFN/ABN), India (Aadhaar/PAN), China (ID), Japan (My Number), and credit cards (Luhn validated). Required for LGPD/GDPR/HIPAA compliance."""
         t = text[:100_000]
         findings: List[dict] = []
         country_filter = {c.upper() for c in countries} if countries else None

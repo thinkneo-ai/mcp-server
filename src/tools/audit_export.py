@@ -40,6 +40,7 @@ def register(mcp: FastMCP) -> None:
         sign_hmac: Annotated[bool, Field(description="Sign export with HMAC SHA-256 for integrity")] = False,
         hmac_key: Annotated[Optional[str], Field(description="HMAC key for signing (required if sign_hmac=true)")] = None,
     ) -> str:
+        """Export audit events in SIEM-compatible formats: JSON, CEF (ArcSight/QRadar), LEEF (IBM QRadar native), syslog (RFC 5424), or CSV. Supports optional HMAC SHA-256 signing for integrity verification."""
         token = require_auth()
         key_h = hash_key(token)
 
@@ -76,6 +77,7 @@ def register(mcp: FastMCP) -> None:
         auth_token: Annotated[Optional[str], Field(description="Auth token for the integration")] = None,
         enabled: Annotated[bool, Field(description="Enable or disable the export")] = True,
     ) -> str:
+        """Configure automated audit export to a SIEM integration (Splunk HEC, Elasticsearch, or generic webhook). Validates endpoint URL for SSRF safety."""
         token = require_auth()
         key_h = hash_key(token)
 
@@ -128,6 +130,7 @@ def register(mcp: FastMCP) -> None:
         annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False),
     )
     def thinkneo_audit_export_status() -> str:
+        """View configured audit export integrations and their last export results. Shows integration type, endpoint, enabled status, and recent export history."""
         token = require_auth()
         key_h = hash_key(token)
 

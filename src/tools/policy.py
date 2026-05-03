@@ -37,6 +37,7 @@ def register(mcp: FastMCP) -> None:
         provider: Annotated[Optional[str], Field(description="AI provider to check (e.g., openai, anthropic, google, mistral)")] = None,
         action: Annotated[Optional[str], Field(description="Specific action to check (e.g., create-completion, use-tool, fine-tune)")] = None,
     ) -> str:
+        """Check if a specific model, provider, or action is allowed by the governance policies configured for a workspace."""
         require_auth()
         workspace = validate_workspace(workspace)
 

@@ -32,6 +32,7 @@ def register(mcp: FastMCP) -> None:
         severity: Annotated[str, Field(description="Filter alerts by severity level: critical, warning, info, or all")] = "all",
         limit: Annotated[int, Field(description="Maximum number of alerts to return (1–100)", ge=1, le=100)] = 20,
     ) -> str:
+        """List active alerts and incidents for a workspace. Includes budget alerts, policy violations, guardrail triggers,"""
         require_auth()
         workspace = validate_workspace(workspace)
 
