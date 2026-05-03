@@ -157,6 +157,7 @@ def register(mcp: FastMCP) -> None:
     def thinkneo_check(
         text: Annotated[str, Field(description="The text or prompt to check for safety issues (max 50,000 characters)")],
     ) -> str:
+        """Free-tier prompt safety check. Analyzes text for prompt injection patterns and PII (credit card numbers, Brazilian CPF, US SSN, email, phone, passwords). Returns a safety assessment with specific warnings."""
         text_to_check = text[:50_000]
         warnings: List[dict] = []
 

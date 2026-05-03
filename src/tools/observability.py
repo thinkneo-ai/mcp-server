@@ -43,6 +43,7 @@ def register(mcp: FastMCP) -> None:
         agent_type: Annotated[str, Field(description="Type of agent: 'assistant', 'autonomous', 'workflow', 'pipeline', or 'generic'")] = "generic",
         metadata: Annotated[Optional[dict], Field(description="Optional dict with additional context (e.g., {\"task\": \"email-draft\", \"user_id\": \"u123\"})")] = None,
     ) -> str:
+        """Start a new agent observability trace. Creates a session that tracks all tool calls, model calls, decisions, and errors for an AI agent run. Returns a session_id to use with thinkneo_log_event and thinkneo_end_trace."""
         token = require_auth()
 
         meta = {}
@@ -94,6 +95,7 @@ def register(mcp: FastMCP) -> None:
         latency_ms: Annotated[int, Field(description="Latency in milliseconds for this event")] = 0,
         metadata: Annotated[Optional[dict], Field(description="Optional dict with additional event context")] = None,
     ) -> str:
+        """Log an event within an active agent trace. Supports event types: tool_call, model_call, decision, error, pii_access, guardrail_triggered. Returns event_id and running session cost."""
         require_auth()
 
         meta = {}
@@ -139,6 +141,7 @@ def register(mcp: FastMCP) -> None:
         session_id: Annotated[str, Field(description="Session ID from thinkneo_start_trace")],
         status: Annotated[str, Field(description="Final session status: 'success', 'failure', or 'timeout'")] = "success",
     ) -> str:
+        """End an active agent trace and get the session summary. Returns total cost, duration, tool/model call counts, and event count. Triggers post-session anomaly detection (cost spikes, error rate)."""
         require_auth()
 
         result = end_session(
@@ -165,6 +168,7 @@ def register(mcp: FastMCP) -> None:
     def thinkneo_get_trace(
         session_id: Annotated[str, Field(description="Session ID to retrieve the trace for")],
     ) -> str:
+        """Retrieve the full trace for an agent session. Returns the complete timeline of events (tool calls, model calls, decisions, errors), session metadata, total cost, duration, and any alerts triggered."""
         require_auth()
 
         result = get_trace(session_id=session_id)
@@ -188,6 +192,7 @@ def register(mcp: FastMCP) -> None:
     def thinkneo_get_observability_dashboard(
         period: Annotated[str, Field(description="Time period: '1h', '24h', '7d', or '30d'")] = "24h",
     ) -> str:
+        """Get the agent observability dashboard — aggregated metrics for your AI agents. Includes total sessions, events, cost, error rate, latency, top agents, top tools, active alerts, and cost trend over time. Like Datadog, but for AI agents."""
         token = require_auth()
 
         valid_periods = {"1h", "24h", "7d", "30d"}

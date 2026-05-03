@@ -45,6 +45,7 @@ def register(mcp: FastMCP) -> None:
         verified_only: Annotated[bool, Field(description="If true, return only verified packages")] = False,
         limit: Annotated[int, Field(description="Max results to return (1-100, default 20)")] = 20,
     ) -> str:
+        """Search the ThinkNEO MCP Marketplace — the npm for MCP tools. Discover MCP servers and tools by keyword, category, rating, or verified status. Returns name, description, tools count, rating, downloads, and verified badge."""
         results = search_registry(
             query=query,
             category=category,
@@ -95,6 +96,7 @@ def register(mcp: FastMCP) -> None:
     def thinkneo_registry_get(
         name: Annotated[str, Field(description="Package name (e.g. 'thinkneo-control-plane', 'filesystem', 'github')")],
     ) -> str:
+        """Get full details for an MCP server package from the ThinkNEO Marketplace. Returns readme, full tools list, version history, reviews, security score,"""
         entry = get_registry_entry(name)
         if not entry:
             return json.dumps({
@@ -137,6 +139,7 @@ def register(mcp: FastMCP) -> None:
         license: Annotated[str, Field(description="License (e.g. MIT, Apache-2.0)")] = "MIT",
         readme: Annotated[str, Field(description="Full readme/documentation in markdown")] = "",
     ) -> str:
+        """Publish an MCP server to the ThinkNEO Marketplace. Validates the endpoint by calling initialize and tools/list, runs automated security scan for secrets and injection patterns, computes a security score (0-100), and stores the entry with version history. Validates the endpoint (calls initialize + tools/list), runs security scan (secrets detection, injection patterns), and stores the entry."""
         # Auth check
         token = require_auth()
 
@@ -183,6 +186,7 @@ def register(mcp: FastMCP) -> None:
         rating: Annotated[int, Field(description="Rating from 1 (poor) to 5 (excellent)")],
         comment: Annotated[str, Field(description="Review comment (max 2000 chars)")] = "",
     ) -> str:
+        """Rate and review an MCP server in the ThinkNEO Marketplace. One review per user per package (updates on repeat). Rating from 1 (poor) to 5 (excellent) with optional comment. Reviews affect the package average rating shown in search results. One review per user per package (updates on repeat)."""
         token = require_auth()
         key_h = hash_key(token)
 
@@ -209,6 +213,7 @@ def register(mcp: FastMCP) -> None:
         name: Annotated[str, Field(description="Package name to install (e.g. 'thinkneo-control-plane')")],
         client_type: Annotated[str, Field(description="Your MCP client: claude-desktop, cursor, windsurf, or custom")] = "claude-desktop",
     ) -> str:
+        """Get installation config for an MCP server from the ThinkNEO Marketplace. Returns ready-to-use JSON config for Claude Desktop, Cursor, Windsurf, or custom clients."""
         token = get_bearer_token()
         key_h = hash_key(token) if token else "anonymous"
 

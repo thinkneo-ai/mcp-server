@@ -47,6 +47,7 @@ def register(mcp: FastMCP) -> None:
             )
         )] = None,
     ) -> str:
+        """Simulate how much your organization would save on AI costs using ThinkNEO Smart Router. Enter your current monthly AI spend and primary model, and see estimated monthly and annual savings with a recommended model mix."""
         # Validate spend
         if monthly_ai_spend <= 0:
             return json.dumps({

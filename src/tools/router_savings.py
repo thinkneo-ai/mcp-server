@@ -42,6 +42,7 @@ def register(mcp: FastMCP) -> None:
             description="Report period: '7d' (7 days), '30d' (30 days), or '90d' (90 days)"
         )] = "30d",
     ) -> str:
+        """Get your AI cost savings report. Shows total requests routed, original cost (what you'd have paid with premium models), actual cost, total savings, savings percentage, breakdown by task type, and model distribution."""
         token = require_auth()
         key_h = hash_key(token)
 

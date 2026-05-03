@@ -32,6 +32,7 @@ def register(mcp: FastMCP) -> None:
         hours: Annotated[int, Field(description="Lookback window in hours")] = 24,
         agent_name: Annotated[Optional[str], Field(description="Filter flows involving this agent (as source or target)")] = None,
     ) -> str:
+        """Map agent-to-agent communication flows. Shows which agents talk to each other, call frequency, cost, error rates, and latency. Identifies hot paths, bottlenecks,"""
         token = require_auth()
         key_h = hash_key(token)
         validate_workspace(workspace)

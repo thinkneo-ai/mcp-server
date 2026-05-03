@@ -28,6 +28,7 @@ def register(mcp: FastMCP) -> None:
         annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False),
     )
     def thinkneo_usage() -> str:
+        """Returns usage statistics for your ThinkNEO API key. Shows calls today, this week, this month, monthly limit, remaining calls, top tools used, estimated cost, and current tier."""
         token = get_bearer_token()
 
         if not token:

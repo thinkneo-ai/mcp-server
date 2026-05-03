@@ -45,6 +45,7 @@ def register(mcp: FastMCP) -> None:
     def thinkneo_rotate_key(
         confirm: Annotated[bool, Field(description="Must be true to confirm rotation intent")],
     ) -> str:
+        """Rotate the current API key. Generates a new key with the same tier and monthly limit, revokes the old one with reason 'rotated'. IMPORTANT: the returned new_key is shown ONCE. Store it securely."""
         # Require auth — caller must be the key being rotated
         try:
             require_plan("pro")

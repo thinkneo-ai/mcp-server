@@ -758,6 +758,7 @@ def register(mcp: FastMCP) -> None:
     def thinkneo_evaluate_trust_score(
         org_name: Annotated[str, Field(description="Organization name for the trust score badge (e.g., 'Acme Corp')")],
     ) -> str:
+        """Evaluate your organization AI Trust Score (0-100) across 10 dimensions: Guardrails, PII Protection, Injection Defense, Audit Trail, Compliance, Model Governance, Cost Controls, Outcome Validation, Observability, and Smart Routing. Returns a score, detailed breakdown, badge level (Platinum/Gold/Silver/Bronze/Unrated), and actionable recommendations. Score is valid for 30 days. Generates a public badge URL for embedding in websites and documentation. Part of the 'From Prompt to Proof' framework."""
         require_auth()
 
         token = get_bearer_token()
@@ -854,6 +855,7 @@ def register(mcp: FastMCP) -> None:
     def thinkneo_get_trust_badge(
         report_token: Annotated[str, Field(description="The report token from a trust score evaluation (URL-safe string)")],
     ) -> str:
+        """Get a public AI Trust Score badge by report token. Returns the organization name, score, badge level, and validity period. Use the badge URL to embed the trust badge in websites and documentation."""
         badge_data = get_trust_badge_by_token(report_token)
 
         if not badge_data:

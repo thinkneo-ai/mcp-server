@@ -30,6 +30,7 @@ def register(mcp: FastMCP) -> None:
     def thinkneo_get_budget_status(
         workspace: Annotated[str, Field(description="Workspace name or ID to retrieve current budget status for")],
     ) -> str:
+        """Get current budget utilization and enforcement status for a workspace. Shows spend vs limit, alert thresholds, and projected overage."""
         require_auth()
         workspace = validate_workspace(workspace)
 

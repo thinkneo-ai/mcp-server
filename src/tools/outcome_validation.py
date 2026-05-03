@@ -83,6 +83,7 @@ def register(mcp: FastMCP) -> None:
             description="Hours until claim expires if not verified (default 24, max 168)"
         )] = 24,
     ) -> str:
+        """Register an action claim from an AI agent. The agent declares it performed an action (e.g., sent an email, created a PR, wrote a file) and ThinkNEO will verify it actually happened. Returns a claim_id for tracking. Part of the Outcome Validation Loop — 'From Prompt to Proof'."""
         token = require_auth()
 
         meta = _parse_metadata(metadata)
@@ -125,6 +126,7 @@ def register(mcp: FastMCP) -> None:
         claim_id: Annotated[str, Field(description="UUID of the claim to verify (from thinkneo_register_claim)")],
         force: Annotated[bool, Field(description="Force re-verification even if already verified/failed")] = False,
     ) -> str:
+        """Trigger verification of a registered action claim. Runs the appropriate verification adapter (HTTP check, file check, database check, etc.) and returns the result with evidence. If already verified, returns cached result (use force=true to re-verify). Part of the Outcome Validation Loop — 'From Prompt to Proof'."""
         token = require_auth()
 
         result = verify_claim(
@@ -151,6 +153,7 @@ def register(mcp: FastMCP) -> None:
     def thinkneo_get_proof(
         claim_id: Annotated[str, Field(description="UUID of the claim to get proof for")],
     ) -> str:
+        """Retrieve the immutable proof record for a verified claim. Includes the original claim, verification evidence, verifier identity, and a SHA-256 proof hash for tamper detection. This is the 'proof' in 'From Prompt to Proof'."""
         token = require_auth()
 
         result = get_proof(api_key=token, claim_id=claim_id)
@@ -174,6 +177,7 @@ def register(mcp: FastMCP) -> None:
     def thinkneo_verification_dashboard(
         period: Annotated[str, Field(description="Time period: '24h', '7d', or '30d'")] = "7d",
     ) -> str:
+        """Aggregated outcome verification metrics — verification rates, failure patterns, agent reliability rankings, and daily trends. Shows how reliably your AI agents are delivering verified outcomes. 'Datadog for AI outcomes'."""
         token = require_auth()
 
         valid_periods = {"24h", "7d", "30d"}

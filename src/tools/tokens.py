@@ -90,6 +90,7 @@ def register(mcp: FastMCP) -> None:
         expected_output_tokens: Annotated[int, Field(description="Expected output tokens (for cost estimation). Defaults to input token count.")] = 0,
         models: Annotated[Optional[List[str]], Field(description="Specific models to estimate (list of model names). Defaults to all.")] = None,
     ) -> str:
+        """Estimate token count and cost for text across 25+ LLM models. Uses tokenizer-specific char-per-token factors (GPT/Claude/Gemini/Llama/etc.) Returns per-model estimates with input + output cost breakdown. Useful for: budgeting before a large batch job, comparing models by workload,"""
         selected_models = models if models else list(_MODEL_PRICING.keys())
 
         results = []

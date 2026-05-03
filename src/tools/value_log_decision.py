@@ -39,6 +39,7 @@ def register(mcp: FastMCP) -> None:
         workspace: Annotated[str, Field(description="Workspace identifier")] = "default",
         metadata: Annotated[Optional[str], Field(description="JSON string with additional context")] = None,
     ) -> str:
+        """Log a business decision made by an AI agent. Tracks the AI cost and the business value generated. If a baseline exists for the process, value is auto-calculated from the baseline cost. Example: agent 'support-bot' resolved a 'customer_support_ticket' at $0.03 AI cost,"""
         token = require_auth()
         key_h = hash_key(token)
         validate_workspace(workspace)

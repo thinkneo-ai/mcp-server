@@ -34,6 +34,7 @@ def register(mcp: FastMCP) -> None:
         process_name: Annotated[Optional[str], Field(description="Filter by specific process")] = None,
         period: Annotated[str, Field(description="Time period: 'today', 'this-week', 'this-month', 'all'")] = "this-month",
     ) -> str:
+        """Analyze cost-per-decision for AI agents. Shows the actual AI cost for each decision, compared to the pre-AI baseline. Answers: 'How much does each AI decision cost?'"""
         token = require_auth()
         key_h = hash_key(token)
         validate_workspace(workspace)

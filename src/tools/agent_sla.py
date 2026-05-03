@@ -48,6 +48,7 @@ def register(mcp: FastMCP) -> None:
             description="'min' = actual must be >= threshold (for accuracy, quality). 'max' = actual must be <= threshold (for cost, latency)."
         )] = "min",
     ) -> str:
+        """Define or update an SLA (Service Level Agreement) for an AI agent. Set accuracy, quality, cost, safety, or latency thresholds with automatic breach detection and configurable actions (alert, escalate, disable, switch_model)."""
         token = require_auth()
 
         result = define_sla(
@@ -73,6 +74,7 @@ def register(mcp: FastMCP) -> None:
             description="Optional: specific agent name. Leave empty for all agents."
         )] = None,
     ) -> str:
+        """Check current SLA status for all agents or a specific agent. Shows actual metric values vs thresholds, healthy/breached status, and error budget remaining."""
         token = require_auth()
 
         result = get_sla_status(api_key=token, agent_name=agent_name)
@@ -91,6 +93,7 @@ def register(mcp: FastMCP) -> None:
         days: Annotated[int, Field(description="Days to look back (default 30)")] = 30,
         agent_name: Annotated[Optional[str], Field(description="Filter by agent name")] = None,
     ) -> str:
+        """View SLA breach history — which SLAs were breached, by which agents,"""
         token = require_auth()
 
         result = get_breaches(api_key=token, days=min(max(days, 1), 365), agent_name=agent_name)
@@ -107,6 +110,7 @@ def register(mcp: FastMCP) -> None:
         annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=True, idempotentHint=True, openWorldHint=False),
     )
     def thinkneo_sla_dashboard() -> str:
+        """SLA overview dashboard — all agents, current status, error budgets, and recent breaches (7d). The SRE dashboard for AI agents."""
         token = require_auth()
 
         result = get_sla_dashboard(api_key=token)

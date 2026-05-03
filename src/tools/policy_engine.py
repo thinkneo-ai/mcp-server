@@ -58,6 +58,7 @@ def register(mcp: FastMCP) -> None:
             )
         )] = None,
     ) -> str:
+        """Create or update a declarative AI governance policy. Policies define rules that AI agents must follow — conditions are evaluated against request context, and effects (block, warn, require_approval, log) are enforced automatically. Supports versioning — updating a policy creates a new version and disables the old one."""
         token = require_auth()
 
         conds = conditions
@@ -94,6 +95,7 @@ def register(mcp: FastMCP) -> None:
             description="Include disabled/superseded policy versions"
         )] = False,
     ) -> str:
+        """List all active AI governance policies for your organization. Shows policy name, version, conditions, effect, and scope."""
         token = require_auth()
 
         policies = list_policies(api_key=token, include_disabled=include_disabled)
@@ -128,6 +130,7 @@ def register(mcp: FastMCP) -> None:
             )
         )],
     ) -> str:
+        """Evaluate a request context against all active policies. Returns whether the request is allowed, which policies were violated, and what effect each violation triggers. Use this before executing agent actions to enforce"""
         token = require_auth()
 
         ctx = context
@@ -151,6 +154,7 @@ def register(mcp: FastMCP) -> None:
         days: Annotated[int, Field(description="Number of days to look back (default 30, max 365)")] = 30,
         unresolved_only: Annotated[bool, Field(description="Show only unresolved violations")] = False,
     ) -> str:
+        """View policy violation history — which policies were triggered, by which agents, how many blocks/warnings/approvals occurred. Shows unresolved"""
         token = require_auth()
 
         d = min(max(days, 1), 365)
