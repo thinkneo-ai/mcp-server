@@ -18,7 +18,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install test dependencies
-        run: pip install httpx pytest pytest-timeout
+        run: pip install httpx pytest pytest-timeout "psycopg[binary]" psycopg_pool
 
       - name: Start chaos stack (5 containers)
         run: docker compose -f tests/chaos/docker-compose-chaos.yml up -d --build
