@@ -54,6 +54,7 @@ def register(mcp: FastMCP) -> None:
         workspace: Annotated[str, Field(description="Workspace name or ID to evaluate compliance readiness for")],
         framework: Annotated[str, Field(description="Compliance framework to assess: soc2 (SOC 2 Type II), gdpr (GDPR), hipaa (HIPAA), or general (ThinkNEO AI governance)")] = "general",
     ) -> str:
+        """Get compliance and audit readiness status for a workspace. Shows governance score, pending actions, and compliance gaps."""
         require_auth()
         workspace = validate_workspace(workspace)
 

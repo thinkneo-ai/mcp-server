@@ -34,6 +34,7 @@ def register(mcp: FastMCP) -> None:
         workspace: Annotated[str, Field(description="Workspace identifier")] = "default",
         days: Annotated[int, Field(description="Analysis window in days")] = 30,
     ) -> str:
+        """Detect waste and inefficiency in AI operations. Analyzes agent performance, A2A communication overhead, error costs, unused capacity, and cost outliers. Returns specific actionable findings like 'you are losing $3,200/month on error retries' or 'this flow is 5x more expensive than your best-performing flow'."""
         token = require_auth()
         key_h = hash_key(token)
         validate_workspace(workspace)

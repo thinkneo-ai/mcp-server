@@ -52,6 +52,7 @@ def register(mcp: FastMCP) -> None:
         model: Annotated[Optional[str], Field(description="Model name (e.g. 'gpt-5')")] = None,
         namespace: Annotated[str, Field(description="Cache namespace (e.g. workspace or tenant name)")] = "default",
     ) -> str:
+        """Look up a cached LLM response by exact prompt match. Returns the cached response if found and not expired. Use before calling an expensive LLM to save cost and latency. Namespaced to prevent collisions across workspaces."""
         require_plan("pro")
         key = _cache_key(prompt, model, namespace)
         try:
@@ -113,6 +114,7 @@ def register(mcp: FastMCP) -> None:
         namespace: Annotated[str, Field(description="Cache namespace")] = "default",
         ttl_seconds: Annotated[int, Field(description="Time-to-live in seconds (default 86400 = 24h)", ge=60, le=30 * 86400)] = 86400,
     ) -> str:
+        """Store an LLM response in the cache for future lookups. Set TTL in seconds (default 24h). Upsert: replaces existing entries."""
         require_plan("pro")
         key = _cache_key(prompt, model, namespace)
         expires_at = datetime.now(timezone.utc) + timedelta(seconds=ttl_seconds)
@@ -167,6 +169,7 @@ def register(mcp: FastMCP) -> None:
     def thinkneo_cache_stats(
         namespace: Annotated[str, Field(description="Cache namespace")] = "default",
     ) -> str:
+        """Get cache performance stats for a namespace. Shows hit rate, entries,"""
         require_plan("pro")
         # Note: namespace isn't queryable directly from cache_key (hash), but we can report global
         try:

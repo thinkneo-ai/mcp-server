@@ -69,6 +69,7 @@ def register(mcp: FastMCP) -> None:
             ),
         ] = "https://agent.thinkneo.ai/a2a",
     ) -> str:
+        """Bridge an MCP tool call to an A2A (Agent-to-Agent Protocol) agent. Maps MCP tool name and parameters to the A2A task format, enabling interoperability between MCP servers and A2A agents. Returns a ready-to-send A2A task object with full protocol compliance. Translates the MCP tool_name and arguments into an A2A task, sends it to the target A2A agent, waits for completion, and translates the response back to MCP format. Use this to make any MCP tool accessible to A2A agents"""
         require_auth()
 
         # Parse arguments
@@ -152,6 +153,7 @@ def register(mcp: FastMCP) -> None:
             ),
         ] = "https://mcp.thinkneo.ai/mcp",
     ) -> str:
+        """Bridge an A2A (Agent-to-Agent Protocol) task to an MCP server. Receives an A2A task, identifies the best matching MCP tool on the target server, executes it, and returns the result wrapped in A2A response format. Enables A2A agents to use any MCP server transparently. Extracts the intent from the A2A task, maps it to an MCP tool, calls the tool, and wraps the result in A2A response format. Use this to let A2A agents interact with any MCP server."""
         require_auth()
 
         # Parse the A2A task
@@ -223,6 +225,7 @@ def register(mcp: FastMCP) -> None:
             ),
         ] = None,
     ) -> str:
+        """Auto-generate an A2A Agent Card from an MCP server's tool list. Each MCP tool is converted into an A2A skill. The resulting agent.json makes the MCP server discoverable by any A2A-compatible agent in Google's agent ecosystem. Defaults to ThinkNEO's own MCP server."""
         require_auth()
 
         # Default: generate ThinkNEO's own agent card
@@ -327,6 +330,7 @@ def register(mcp: FastMCP) -> None:
         annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False),
     )
     def thinkneo_bridge_list_mappings() -> str:
+        """List all active MCP ↔ A2A bridge mappings and translation statistics. Shows which MCP servers are mapped to which A2A agents, plus 30-day translation stats (total, success rate, average latency)."""
         require_auth()
 
         mappings = get_active_mappings()

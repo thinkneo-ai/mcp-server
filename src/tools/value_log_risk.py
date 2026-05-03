@@ -44,6 +44,7 @@ def register(mcp: FastMCP) -> None:
         description: Annotated[Optional[str], Field(description="Brief description of what was blocked")] = None,
         workspace: Annotated[str, Field(description="Workspace identifier")] = "default",
     ) -> str:
+        """Log a risk event that was blocked or avoided by the governance layer. Quantifies the estimated dollar impact of the avoided risk. Examples: PII leak blocked (est. $50K GDPR fine), prompt injection prevented, policy violation caught before production."""
         token = require_auth()
         key_h = hash_key(token)
         validate_workspace(workspace)

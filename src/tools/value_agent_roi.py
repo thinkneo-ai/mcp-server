@@ -32,6 +32,7 @@ def register(mcp: FastMCP) -> None:
         agent_name: Annotated[Optional[str], Field(description="Specific agent to analyze. If omitted, returns all agents.")] = None,
         days: Annotated[int, Field(description="Number of days to analyze")] = 30,
     ) -> str:
+        """Calculate ROI per AI agent. Shows value generated vs AI cost consumed, with daily trend, success rate, and comparison to pre-AI baseline."""
         token = require_auth()
         key_h = hash_key(token)
         validate_workspace(workspace)

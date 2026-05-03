@@ -88,6 +88,7 @@ def register(mcp: FastMCP) -> None:
         provider: Annotated[Optional[str], Field(description="Specific provider to check: openai, anthropic, google, mistral, xai, cohere, or together. Omit to get status for all providers.")] = None,
         workspace: Annotated[Optional[str], Field(description="Workspace context for provider routing configuration (optional)")] = None,
     ) -> str:
+        """Get real-time health and performance status of AI providers routed through the ThinkNEO gateway. Shows latency, error rates, and"""
         fetched_at = utcnow()
 
         if provider:

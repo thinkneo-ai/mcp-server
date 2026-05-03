@@ -42,6 +42,7 @@ def register(mcp: FastMCP) -> None:
             description="Number of days to include in the report (default 30, max 365)"
         )] = 30,
     ) -> str:
+        """Generate a compliance report for a regulatory framework. Aggregates data from all ThinkNEO layers (Trust Score, guardrails, PII, observability, policies, outcome validation) into a framework-specific report with compliance scoring, findings, and gap analysis. Supported frameworks: 'lgpd' (LGPD Brazil), 'iso_42001' (ISO 42001 AI Management), 'eu_ai_act' (EU AI Act)."""
         token = require_auth()
         d = min(max(days, 1), 365)
 
@@ -59,6 +60,7 @@ def register(mcp: FastMCP) -> None:
     def thinkneo_compliance_list(
         limit: Annotated[int, Field(description="Max reports to return (default 20)")] = 20,
     ) -> str:
+        """List previously generated compliance reports. Shows framework, period,"""
         token = require_auth()
 
         result = list_compliance_reports(api_key=token, limit=min(limit, 100))
