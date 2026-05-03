@@ -32,7 +32,7 @@ def register(mcp: FastMCP) -> None:
             "'iso_42001' (ISO 42001 AI Management), 'eu_ai_act' (EU AI Act). "
             "Returns SHA-256 signed, tamper-evident report. Requires authentication."
         ),
-        annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=True, idempotentHint=False, openWorldHint=False),
+        annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False, idempotentHint=False, openWorldHint=False),
     )
     def thinkneo_compliance_generate(
         framework: Annotated[str, Field(
