@@ -42,6 +42,7 @@ def register(mcp: FastMCP) -> None:
             description="Filter by task type: 'summarization', 'code_generation', 'classification', 'translation', etc. Leave empty for all."
         )] = None,
     ) -> str:
+        """View the outcome benchmark matrix — real quality scores per provider/model/task_type based on verified outcomes, not static estimates. Shows verification rates, sample counts,"""
         token = require_auth()
         result = get_benchmark_report(api_key=token, task_type=task_type)
         result["generated_at"] = utcnow_obs()
@@ -64,6 +65,7 @@ def register(mcp: FastMCP) -> None:
             description="Optional list of providers to compare (e.g., ['anthropic', 'openai']). Leave empty for all."
         )] = None,
     ) -> str:
+        """Compare providers side-by-side for a specific task type. Shows quality scores, verification rates, and rankings based on real outcomes."""
         token = require_auth()
         prov = providers
         if isinstance(prov, str):
@@ -90,6 +92,7 @@ def register(mcp: FastMCP) -> None:
             description="Minimum quality score required (0-100, default 85)"
         )] = 85,
     ) -> str:
+        """Explain why the Smart Router would choose a specific model for a task type. Shows both benchmark-based (real outcomes) and static quality estimates, and explains the reasoning behind the recommendation."""
         token = require_auth()
         result = explain_routing(api_key=token, task_type=task_type, quality_threshold=quality_threshold)
         result["generated_at"] = utcnow_obs()

@@ -53,6 +53,7 @@ def register(mcp: FastMCP) -> None:
             ),
         ],
     ) -> str:
+        """Write or update a Claude Code project memory file (.md). Persists project context, user preferences, feedback, and reference notes across Claude Code sessions. Filename must end in .md with lowercase alphanumeric characters. Path traversal is blocked. Requires authentication. Use this to persist project context, user preferences, feedback, and reference notes across Claude Code sessions. The filename must end in .md and contain only lowercase letters, digits, underscores, and hyphens (e.g. 'user_fabio.md',"""
         if not _MEMORY_DIR.is_dir():
             return json.dumps(
                 {

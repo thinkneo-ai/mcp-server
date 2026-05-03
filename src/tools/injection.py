@@ -178,6 +178,7 @@ def register(mcp: FastMCP) -> None:
         text: Annotated[str, Field(description="Text to scan for prompt injection (max 50,000 chars)")],
         strict: Annotated[bool, Field(description="Strict mode: flag hypothetical/fictional framings as high risk")] = False,
     ) -> str:
+        """Advanced prompt injection detector. Scans text for 50+ known jailbreak techniques: DAN/STAN/DUDE, role-play bypass, system prompt leaks, delimiter injection, safety bypass, indirect injection via documents, base64 smuggling, unicode obfuscation, and chain-of-thought manipulation. Use this BEFORE passing untrusted text to an LLM."""
         t = text[:50_000]
         findings: List[dict] = []
 

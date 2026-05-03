@@ -42,6 +42,7 @@ def register(mcp: FastMCP) -> None:
         preferred_dates: Annotated[Optional[str], Field(description="Preferred meeting dates, times, and timezone (e.g., 'Tuesdays or Thursdays, 9-11am EST')")] = None,
         context: Annotated[Optional[str], Field(description="Additional context such as current AI providers used, request volume, or specific use case")] = None,
     ) -> str:
+        """Schedule a demo or discovery call with the ThinkNEO team. Collects contact information and preferences."""
         settings = get_settings()
 
         # Basic validation

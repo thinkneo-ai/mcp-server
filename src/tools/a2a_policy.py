@@ -37,6 +37,7 @@ def register(mcp: FastMCP) -> None:
         enabled: Annotated[bool, Field(description="Enable or disable this policy")] = True,
         workspace: Annotated[str, Field(description="Workspace identifier")] = "default",
     ) -> str:
+        """Define a policy for agent-to-agent communication. Controls which agents can talk to each other, what actions are allowed, cost limits per call, and rate limits."""
         token = require_auth()
         key_h = hash_key(token)
         validate_workspace(workspace)

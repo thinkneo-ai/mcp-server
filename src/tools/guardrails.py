@@ -32,6 +32,7 @@ def register(mcp: FastMCP) -> None:
         workspace: Annotated[str, Field(description="Workspace whose guardrail policies to apply for this evaluation")],
         guardrail_mode: Annotated[str, Field(description="Evaluation mode: 'monitor' (log violations only) or 'enforce' (block the request on violation)")] = "monitor",
     ) -> str:
+        """Evaluate a prompt or text against ThinkNEO guardrail policies before sending it to an AI provider. Returns risk assessment, violations found,"""
         require_auth()
         workspace = validate_workspace(workspace)
 

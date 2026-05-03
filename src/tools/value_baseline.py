@@ -36,6 +36,7 @@ def register(mcp: FastMCP) -> None:
         workspace: Annotated[str, Field(description="Workspace identifier")] = "default",
         notes: Annotated[Optional[str], Field(description="Additional context about this baseline")] = None,
     ) -> str:
+        """Define the pre-AI cost baseline for a business process. Example: 'customer_support_ticket costs $12 per ticket and takes 15 minutes without AI'. This baseline is used to calculate ROI when agents handle the same process."""
         token = require_auth()
         key_h = hash_key(token)
         validate_workspace(workspace)

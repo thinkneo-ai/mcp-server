@@ -151,6 +151,7 @@ def register(mcp: FastMCP) -> None:
         text: Annotated[str, Field(description="Text to scan for secrets (max 100,000 chars)")],
         include_matches: Annotated[bool, Field(description="Include partial (masked) matches in response")] = True,
     ) -> str:
+        """Scan text for leaked secrets, API keys, tokens, credentials, and private keys before sending to an LLM or committing to version control. Detects 40+ secret types across AWS, GCP, Azure, Stripe, OpenAI, Anthropic, GitHub, Slack, Twilio, SendGrid, private keys, JWTs, database URIs and more. Returns partial matches with positions so you can redact before sending."""
         text_to_check = text[:100_000]
         findings: List[dict] = []
         by_severity = {"critical": 0, "high": 0, "medium": 0, "low": 0}
