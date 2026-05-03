@@ -26,7 +26,7 @@ def register(mcp: FastMCP) -> None:
             "This baseline is used to calculate ROI when agents handle the same process. "
             "Call this once per process to establish the comparison point."
         ),
-        annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=True, idempotentHint=True, openWorldHint=False),
+        annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False),
     )
     def thinkneo_set_baseline(
         process_name: Annotated[str, Field(description="Name of the business process, e.g. 'customer_support_ticket', 'loan_review', 'content_moderation'")],

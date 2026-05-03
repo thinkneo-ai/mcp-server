@@ -25,7 +25,7 @@ def register(mcp: FastMCP) -> None:
             "what actions are allowed, cost limits per call, and rate limits. "
             "Example: 'support-bot can delegate_task to billing-agent, max $0.10/call, max 100 calls/hour'."
         ),
-        annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=True, idempotentHint=True, openWorldHint=False),
+        annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False),
     )
     def thinkneo_a2a_set_policy(
         from_agent: Annotated[str, Field(description="Source agent name (or '*' for any agent)")],

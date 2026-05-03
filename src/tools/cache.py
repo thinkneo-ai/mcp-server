@@ -105,7 +105,7 @@ def register(mcp: FastMCP) -> None:
             "(default 24h). Upsert: replaces existing entries. "
             "Use this AFTER calling an LLM provider to cache the response for future calls."
         ),
-        annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=True, idempotentHint=True, openWorldHint=False),
+        annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False),
     )
     def thinkneo_cache_store(
         prompt: Annotated[str, Field(description="The prompt text")],

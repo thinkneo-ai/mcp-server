@@ -41,7 +41,7 @@ def register(mcp: FastMCP) -> None:
             "Part of the Outcome Validation Loop — 'From Prompt to Proof'. "
             "Requires authentication."
         ),
-        annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=True, idempotentHint=False, openWorldHint=False),
+        annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False, idempotentHint=False, openWorldHint=False),
     )
     def thinkneo_register_claim(
         action: Annotated[str, Field(
@@ -120,7 +120,7 @@ def register(mcp: FastMCP) -> None:
             "Part of the Outcome Validation Loop — 'From Prompt to Proof'. "
             "Requires authentication."
         ),
-        annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=True, idempotentHint=True, openWorldHint=False),
+        annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False),
     )
     def thinkneo_verify_claim(
         claim_id: Annotated[str, Field(description="UUID of the claim to verify (from thinkneo_register_claim)")],

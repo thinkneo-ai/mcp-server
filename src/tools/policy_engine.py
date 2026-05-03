@@ -33,7 +33,7 @@ def register(mcp: FastMCP) -> None:
             "Supports versioning — updating a policy creates a new version and disables the old one. "
             "Part of the Policy Engine — Governance-as-Code. Requires authentication."
         ),
-        annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=True, idempotentHint=False, openWorldHint=False),
+        annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False, idempotentHint=False, openWorldHint=False),
     )
     def thinkneo_policy_create(
         name: Annotated[str, Field(description="Policy name (e.g., 'approval_over_10k', 'pii_blocked_models')")],
@@ -115,7 +115,7 @@ def register(mcp: FastMCP) -> None:
             "each violation triggers. Use this before executing agent actions to enforce "
             "governance rules. Requires authentication."
         ),
-        annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=True, idempotentHint=True, openWorldHint=False),
+        annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False),
     )
     def thinkneo_policy_evaluate(
         context: Annotated[dict, Field(

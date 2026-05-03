@@ -69,7 +69,7 @@ def register(mcp: FastMCP) -> None:
             "Elasticsearch, or generic webhook). Validates endpoint URL for SSRF safety. "
             "Requires authentication."
         ),
-        annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=True, idempotentHint=True, openWorldHint=False),
+        annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False),
     )
     def thinkneo_set_audit_export(
         integration: Annotated[str, Field(description="Integration type: splunk, elastic, webhook")],
