@@ -23,6 +23,9 @@ If you discover a security vulnerability in ThinkNEO MCP Gateway, please report 
 ## Scope
 
 In scope:
+- ThinkShield detection engine, rule packs, and middleware
+- MCP tools and protocol implementation
+- A2A skills and protocol implementation
 - MCP endpoint (mcp.thinkneo.ai/mcp)
 - A2A endpoint (agent.thinkneo.ai/a2a)
 - Authentication and authorization
@@ -30,6 +33,7 @@ In scope:
 - API key management
 
 Out of scope:
+- Proprietary ThinkNEO Platform components (thinkneo.ai infrastructure)
 - Social engineering
 - DDoS attacks
 - Issues in third-party dependencies (report to the upstream project)

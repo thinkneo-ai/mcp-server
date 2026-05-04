@@ -33,7 +33,7 @@ Production initialize response (`https://mcp.thinkneo.ai/mcp`):
 |---|--------|-------------|--------|----------------|-------|
 | 1 | `initialize` | Core | PASS | server.py | unit |
 | 2 | `ping` | Core | PASS | framework | unit |
-| 3 | `tools/list` | Tools | PASS | tools/__init__.py | 62 tools validated |
+| 3 | `tools/list` | Tools | PASS | tools/__init__.py | 72 tools validated |
 | 4 | `tools/call` | Tools | PASS | tools/*.py | adversarial + functional |
 | 5 | `resources/list` | Resources | PASS | capabilities.py | unit |
 | 6 | `resources/read` | Resources | PASS | capabilities.py | unit |
@@ -57,7 +57,7 @@ Production initialize response (`https://mcp.thinkneo.ai/mcp`):
 
 ## Tool Annotations (MCP 2024-11-05)
 
-All 62 tools have complete annotations:
+All 72 tools have complete annotations:
 
 | Annotation | True | False | Total |
 |------------|------|-------|-------|
@@ -95,7 +95,7 @@ curl -sX POST https://mcp.thinkneo.ai/mcp \
   -H "Content-Type: application/json" \
   -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"validator","version":"1.0"}}}'
 
-# tools/list — 62 tools
+# tools/list — 72 tools
 curl -sX POST https://mcp.thinkneo.ai/mcp \
   -H "Accept: application/json, text/event-stream" \
   -H "Content-Type: application/json" \

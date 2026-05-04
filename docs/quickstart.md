@@ -4,7 +4,7 @@ Get up and running with the ThinkNEO AI Control Plane in under 5 minutes.
 
 **Endpoint:** `https://mcp.thinkneo.ai/mcp`
 **Transport:** streamable-http (MCP JSON-RPC 2.0)
-**22 tools** | **9 free (no auth)** | **500 calls/month free tier**
+**72 tools** | **9 free (no auth)** | **500 calls/month free tier**
 
 ---
 
@@ -507,7 +507,7 @@ Add to `.vscode/mcp.json` in your workspace:
 
 | Tier | Calls/Month | Price | Features |
 |------|-------------|-------|----------|
-| **Free** | 500 | $0 | All 22 tools, usage tracking |
+| **Free** | 500 | $0 | All 72 tools, usage tracking |
 | **Starter** | 5,000 | $29/mo | Priority support, custom rules |
 | **Enterprise** | Unlimited | Custom | SLA, SSO, dedicated support |
 

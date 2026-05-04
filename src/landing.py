@@ -220,7 +220,7 @@ LANDING_HTML = """\
     </p>
     <div class="hero-badges">
       <div class="hero-badge green"><span class="status-dot"></span>Operational</div>
-      <div class="hero-badge blue">12 Tools</div>
+      <div class="hero-badge blue">72 Tools</div>
       <div class="hero-badge teal">500 Free Calls/mo</div>
     </div>
   </div>
@@ -309,7 +309,7 @@ LANDING_HTML = """\
         <div class="pricing-price">$0 <span>/month</span></div>
         <div class="pricing-calls">500 calls/month</div>
         <ul class="pricing-features">
-          <li>All 12 tools available</li>
+          <li>All 72 tools available</li>
           <li>Usage tracking & stats</li>
           <li>Prompt safety checks</li>
           <li>Auto-provisioned API key</li>

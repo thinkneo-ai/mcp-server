@@ -8,7 +8,7 @@ from tests.conftest import parse_tool_result, tool_fn
 class TestFixtureSmoke:
     def test_all_tools_registered(self, all_tools):
         """Verify tools are registered and count is reasonable."""
-        assert len(all_tools) >= 50, f"Expected >=50 tools, got {len(all_tools)}"
+        assert len(all_tools) >= 72, f"Expected >=50 tools, got {len(all_tools)}"
 
     def test_tool_has_fn(self, all_tools):
         """Every tool has a callable .fn attribute."""

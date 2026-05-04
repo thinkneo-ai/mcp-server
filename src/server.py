@@ -115,7 +115,7 @@ register_completions(mcp)
 
 logger.info(
     "ThinkNEO MCP Server configured: %d tools, 2 prompts, 2 resources, auth_required=%s",
-    26,  # 22 existing + 4 bridge tools
+    72,  # all registered tools
     settings.require_auth,
 )
 
