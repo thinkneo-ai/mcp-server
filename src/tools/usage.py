@@ -38,14 +38,14 @@ def register(mcp: FastMCP) -> None:
                 "message": (
                     "No API key provided. Public tools (provider_status, schedule_demo, "
                     "read_memory, thinkneo_check) are available without authentication. "
-                    "For usage tracking and access to all 12 tools, provide an API key."
+                    "For usage tracking and access to all 72 tools, provide an API key."
                 ),
                 "free_tier": {
                     "monthly_limit": 500,
                     "price": "Free",
                     "features": [
                         "500 tool calls per month",
-                        "All 12 tools available",
+                        "All 72 tools available",
                         "Usage tracking and stats",
                         "Prompt safety checks",
                     ],
