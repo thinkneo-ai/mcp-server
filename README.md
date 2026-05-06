@@ -145,6 +145,13 @@ See [SECURITY.md](SECURITY.md) for vulnerability reporting.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md).
 
+## Related
+
+| Server | Description | Tools |
+|--------|-------------|-------|
+| [thinkneo-control-plane](https://glama.ai/mcp/servers/thinkneo-ai/mcp-server) | Enterprise AI Control Plane (this repo) | 72 tools |
+| [thinkneo-mcp-smb-products](https://glama.ai/mcp/servers/thinkneo-ai/mcp-smb-products) | SMB standalone products — self-serve via TNC credits | 37 tools |
+
 ## License
 
 Apache-2.0 — see [LICENSE](LICENSE).
