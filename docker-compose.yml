@@ -45,7 +45,6 @@ services:
     restart: unless-stopped
     ports:
       - "127.0.0.1:8081:8081"
-      - "127.0.0.1:8081:8081"
     volumes:
       - /home/openclaw/.claude/projects/-opt/memory:/app/memory:rw
     env_file:
