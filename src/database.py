@@ -182,16 +182,20 @@ def log_tool_call(
     region: Optional[str] = None,
     cost_estimate: float = 0.0,
 ) -> None:
-    """Log a tool call to the usage_log table."""
+    """Log a tool call to the usage_log table (with tenant_id from api_keys)."""
     try:
         with _get_conn() as conn:
             with conn.cursor() as cur:
+                # Resolve tenant_id from api_keys for this key_hash
+                cur.execute("SELECT tenant_id FROM api_keys WHERE key_hash = %s", (key_hash,))
+                row = cur.fetchone()
+                tenant_id = (row or {}).get("tenant_id") or "anonymous"
                 cur.execute(
                     """
-                    INSERT INTO usage_log (key_hash, tool_name, ip, region, cost_estimate_usd)
-                    VALUES (%s, %s, %s, %s, %s)
+                    INSERT INTO usage_log (key_hash, tool_name, ip, region, cost_estimate_usd, tenant_id)
+                    VALUES (%s, %s, %s, %s, %s, %s)
                     """,
-                    (key_hash, tool_name, ip, region, cost_estimate),
+                    (key_hash, tool_name, ip, region, cost_estimate, tenant_id),
                 )
     except Exception as exc:
         logger.warning("DB log_tool_call failed: %s", exc)

@@ -1,0 +1,46 @@
+services:
+  thinkneo-mcp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: thinkneo-mcp-server:latest
+    container_name: thinkneo-mcp-server
+    user: "999:988"
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8081:8081"
+      - "100.75.242.28:8081:8081"
+    volumes:
+      - /home/openclaw/.claude/projects/-opt/memory:/app/memory:rw
+    # All environment variables come from .env only — no secrets in this file.
+    env_file:
+      - .env
+    # Non-secret config only here
+    environment:
+      HOST: "0.0.0.0"
+      PORT: "8081"
+      MCP_FROM_EMAIL: "ThinkNEO <no-reply@thinkneo.ai>"
+      MCP_DB_HOST: "172.17.0.1"
+      MCP_DB_PORT: "5432"
+      MCP_DB_NAME: "thinkneo_mcp"
+      MCP_DB_USER: "mcp_user"
+    # Hardening: read-only root filesystem + no-new-privileges + drop all caps
+    read_only: true
+    tmpfs:
+      - /tmp:size=64M,mode=1777
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    healthcheck:
+      test: ["CMD", "python3", "-c",
+        "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8081/mcp/docs', timeout=4)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"

@@ -1,77 +1,83 @@
 """
 Tool: thinkneo_check_spend
-Returns AI spend summary for a workspace, broken down by provider/model/team.
-Requires authentication.
+Returns AI spend summary from the live brain API gateway.
 """
-
 from __future__ import annotations
-
 import json
 from typing import Annotated, Optional
-
 from mcp.server.fastmcp import FastMCP
 from mcp.types import ToolAnnotations
 from pydantic import Field
-
-from ..auth import require_auth
-from ._common import demo_note, utcnow, validate_workspace
-
+from ..auth import require_auth, get_bearer_token
+from ..brain_client import brain_get, is_error
+from ._common import utcnow, validate_workspace
 
 def register(mcp: FastMCP) -> None:
     @mcp.tool(
         name="thinkneo_check_spend",
         description=(
             "Check AI spend summary for a workspace, team, or project. "
-            "Returns cost breakdown by provider, model, and time period. "
-            "Requires authentication."
+            "Returns real cost breakdown by provider, model, and time period "
+            "from the ThinkNEO AI gateway."
         ),
         annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False),
     )
-    def thinkneo_check_spend(
-        workspace: Annotated[str, Field(description="Workspace name or ID (e.g., 'prod-engineering', 'finance-team')")],
-        period: Annotated[str, Field(description="Time period for the report: today, this-week, this-month, last-month, or custom")] = "this-month",
-        group_by: Annotated[str, Field(description="Dimension to group costs by: provider, model, team, or project")] = "provider",
-        start_date: Annotated[Optional[str], Field(description="Start date for a custom period in ISO format (YYYY-MM-DD). Only used when period='custom'")] = None,
-        end_date: Annotated[Optional[str], Field(description="End date for a custom period in ISO format (YYYY-MM-DD). Only used when period='custom'")] = None,
+    async def thinkneo_check_spend(
+        workspace: Annotated[str, Field(description="Workspace name or ID")] = "default",
+        period: Annotated[str, Field(description="Time period: today, this-week, this-month, last-month")] = "this-month",
+        group_by: Annotated[str, Field(description="Group costs by: provider, model, team, or project")] = "provider",
     ) -> str:
         """Check AI spend summary for a workspace, team, or project. Returns cost breakdown by provider, model, and time period."""
         require_auth()
         workspace = validate_workspace(workspace)
+        token = get_bearer_token()
 
-        valid_periods = {"today", "this-week", "this-month", "last-month", "custom"}
-        if period not in valid_periods:
-            period = "this-month"
+        # Try tenant finops showback endpoint first
+        params = {}
+        if period == "today":
+            params["range"] = "1d"
+        elif period == "this-week":
+            params["range"] = "7d"
+        elif period == "last-month":
+            params["range"] = "30d"
+        else:
+            params["range"] = "30d"
 
-        valid_group_by = {"provider", "model", "team", "project"}
-        if group_by not in valid_group_by:
-            group_by = "provider"
+        showback = await brain_get("/v1/tenant/finops/showback", params=params, token=token)
 
-        result = {
+        if not is_error(showback):
+            return json.dumps({
+                "workspace": workspace,
+                "period": period,
+                "source": "live_gateway",
+                "data": showback,
+                "generated_at": utcnow(),
+                "dashboard_url": f"https://thinkneo.ai/app/dashboard/",
+            }, indent=2)
+
+        # Fallback: usage events aggregate
+        usage = await brain_get("/v1/tenant/usage-events", params={"limit": "100"}, token=token)
+
+        if not is_error(usage):
+            events = usage if isinstance(usage, list) else usage.get("events", usage.get("data", []))
+            total_cost = sum(float(e.get("amount_usd", 0) or e.get("cost_usd", 0) or 0) for e in events if isinstance(e, dict))
+            total_tokens = sum(int(e.get("total_tokens", 0) or 0) for e in events if isinstance(e, dict))
+            return json.dumps({
+                "workspace": workspace,
+                "period": period,
+                "source": "live_gateway",
+                "total_cost_usd": round(total_cost, 4),
+                "total_tokens": total_tokens,
+                "request_count": len(events) if isinstance(events, list) else 0,
+                "generated_at": utcnow(),
+            }, indent=2)
+
+        # Both failed — return error with context
+        return json.dumps({
             "workspace": workspace,
             "period": period,
-            "group_by": group_by,
-            "total_cost_usd": 0.0,
-            "currency": "USD",
-            "breakdown": {},
-            "top_consumers": [],
-            "token_summary": {
-                "input_tokens": 0,
-                "output_tokens": 0,
-                "total_tokens": 0,
-            },
-            "request_count": 0,
-            "avg_cost_per_request_usd": 0.0,
-            "cost_trend": "stable",
-            "budget_utilization_pct": 0.0,
+            "source": "gateway_unavailable",
+            "error": showback.get("detail", "Could not reach brain API"),
+            "note": "Ensure your API key has tenant access. Contact hello@thinkneo.ai for setup.",
             "generated_at": utcnow(),
-            "dashboard_url": f"https://thinkneo.ai/workspaces/{workspace}/finops",
-            "_demo": demo_note(workspace),
-        }
-
-        if period == "custom":
-            result["period_range"] = {
-                "start": start_date or "not-specified",
-                "end": end_date or "not-specified",
-            }
-
-        return json.dumps(result, indent=2)
+        }, indent=2)

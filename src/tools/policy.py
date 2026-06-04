@@ -1,111 +1,52 @@
 """
 Tool: thinkneo_check_policy
-Checks if a model, provider, or action is allowed by workspace governance policies.
-Requires authentication.
+Returns policy status from the live brain API.
 """
-
 from __future__ import annotations
-
 import json
-from typing import Annotated, Optional
-
+from typing import Annotated
 from mcp.server.fastmcp import FastMCP
 from mcp.types import ToolAnnotations
 from pydantic import Field
-
-from ..auth import require_auth
-from ._common import demo_note, utcnow, validate_workspace
-
-# Demo blocklist — replace with real policy engine calls
-_BLOCKED_MODELS: set[str] = {"gpt-4-raw", "unrestricted-model", "llama-uncensored"}
-_BLOCKED_PROVIDERS: set[str] = set()  # All providers allowed in demo
-
+from ..auth import require_auth, get_bearer_token
+from ..brain_client import brain_get, is_error
+from ._common import utcnow, validate_workspace
 
 def register(mcp: FastMCP) -> None:
     @mcp.tool(
         name="thinkneo_check_policy",
-        description=(
-            "Check if a specific model, provider, or action is allowed by the "
-            "governance policies configured for a workspace. "
-            "Requires authentication."
-        ),
+        description="Check AI governance policies including model access, budget limits, data controls, and agent governance from the ThinkNEO gateway.",
         annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False),
     )
-    def thinkneo_check_policy(
-        workspace: Annotated[str, Field(description="Workspace name or ID whose governance policies to check against")],
-        model: Annotated[Optional[str], Field(description="AI model name to check (e.g., gpt-4o, claude-sonnet-4-6, gemini-2.0-flash)")] = None,
-        provider: Annotated[Optional[str], Field(description="AI provider to check (e.g., openai, anthropic, google, mistral)")] = None,
-        action: Annotated[Optional[str], Field(description="Specific action to check (e.g., create-completion, use-tool, fine-tune)")] = None,
+    async def thinkneo_check_policy(
+        workspace: Annotated[str, Field(description="Workspace name or ID")] = "default",
     ) -> str:
         """Check if a specific model, provider, or action is allowed by the governance policies configured for a workspace."""
         require_auth()
         workspace = validate_workspace(workspace)
+        token = get_bearer_token()
 
-        checks: list[dict] = []
-        overall_allowed = True
+        result = {"workspace": workspace, "source": "live_gateway", "fetched_at": utcnow()}
 
-        if model:
-            model_blocked = model.lower() in _BLOCKED_MODELS
-            checks.append(
-                {
-                    "type": "model",
-                    "value": model,
-                    "allowed": not model_blocked,
-                    "reason": (
-                        f"Model '{model}' is on the workspace blocklist."
-                        if model_blocked
-                        else f"Model '{model}' is permitted by workspace policy."
-                    ),
-                }
-            )
-            if model_blocked:
-                overall_allowed = False
-
-        if provider:
-            provider_blocked = provider.lower() in _BLOCKED_PROVIDERS
-            checks.append(
-                {
-                    "type": "provider",
-                    "value": provider,
-                    "allowed": not provider_blocked,
-                    "reason": (
-                        f"Provider '{provider}' is not approved for this workspace."
-                        if provider_blocked
-                        else f"Provider '{provider}' is an approved provider."
-                    ),
-                }
-            )
-            if provider_blocked:
-                overall_allowed = False
-
-        if action:
-            checks.append(
-                {
-                    "type": "action",
-                    "value": action,
-                    "allowed": True,
-                    "reason": f"Action '{action}' is permitted by default policy.",
-                }
-            )
-
-        if not checks:
-            checks.append(
-                {
-                    "type": "workspace",
-                    "value": workspace,
-                    "allowed": True,
-                    "reason": "Workspace exists and is active.",
-                }
-            )
-
-        result = {
-            "workspace": workspace,
-            "overall_allowed": overall_allowed,
-            "checks": checks,
-            "policy_version": "2026-01-01",
-            "evaluated_at": utcnow(),
-            "policy_url": f"https://thinkneo.ai/workspaces/{workspace}/policies",
-            "_demo": demo_note(workspace),
-        }
+        metrics = await brain_get("/v1/internal/runtime-metrics", token=token)
+        if not is_error(metrics):
+            rm = metrics.get("runtime_metrics", metrics)
+            result["policies"] = {
+                "compliance_gateway": {"enabled": rm.get("compliance_gateway_enabled"), "mode": rm.get("compliance_gateway_mode")},
+                "runtime_guardrails": {"enabled": rm.get("goal2_runtime_guardrails_enabled"), "mode": rm.get("goal2_runtime_guardrails_mode")},
+                "data_controls": {"enabled": rm.get("goal3_data_controls_enabled"), "mode": rm.get("goal3_data_controls_mode"), "mask_input": rm.get("goal3_mask_input_enabled"), "mask_output": rm.get("goal3_mask_output_enabled")},
+                "governance": {"enabled": rm.get("goal4_governance_enabled"), "mode": rm.get("goal4_governance_mode"), "frameworks": rm.get("goal4_required_frameworks")},
+                "agent_governance": {"enabled": rm.get("goal5_agent_governance_enabled"), "mode": rm.get("goal5_agent_governance_mode"), "require_approval": rm.get("goal5_require_approval_for_agents")},
+                "finops": {"enabled": rm.get("goal7_finops_accountability_enabled"), "spend_control_ratio": rm.get("goal6_default_spend_control_ratio")},
+                "rate_limiting": {"enabled": rm.get("gateway_rate_limit_enabled"), "requests_per_minute": rm.get("gateway_rate_limit_requests_per_window")},
+            }
+            result["enforcement_stats"] = {
+                "requests_total": rm.get("requests_total", 0),
+                "blocked_total": rm.get("blocked_total", 0),
+                "guardrails_blocked": rm.get("guardrails_blocked_total", 0),
+                "data_security_blocked": rm.get("data_security_blocked_total", 0),
+            }
+        else:
+            result["error"] = "Could not reach gateway"
 
         return json.dumps(result, indent=2)

@@ -28,9 +28,11 @@ from .logging_capability import register_logging
 from .config import get_settings
 from .agent_card import AgentCardMiddleware
 from .badge import BadgeMiddleware
+from .signup import SignupMiddleware
 from .otel import setup_otel
 from .middleware.otel_middleware import OTELMiddleware
 from .middleware.rate_limit import RateLimitMiddleware
+from .oauth import OAuthMiddleware
 from .landing import LANDING_HTML
 from .registry_landing import REGISTRY_HTML
 from .tools import register_all
@@ -169,14 +171,16 @@ class LandingPageMiddleware:
 
 _mcp_with_auth = BearerTokenMiddleware(_mcp_starlette)
 _mcp_with_landing = LandingPageMiddleware(_mcp_with_auth)
-_mcp_with_badge = BadgeMiddleware(_mcp_with_landing)
+_mcp_with_signup = SignupMiddleware(_mcp_with_landing)
+_mcp_with_badge = BadgeMiddleware(_mcp_with_signup)
 _mcp_with_agent_card = AgentCardMiddleware(_mcp_with_badge)
 _mcp_with_ratelimit = RateLimitMiddleware(_mcp_with_agent_card)
 _mcp_with_otel = OTELMiddleware(_mcp_with_ratelimit)
+_mcp_with_oauth = OAuthMiddleware(_mcp_with_otel)
 
 # CORS — instantiate CORSMiddleware as a raw ASGI wrapper (preserves lifespan)
 app = CORSMiddleware(
-    app=_mcp_with_otel,
+    app=_mcp_with_oauth,
     allow_origins=settings.allowed_origins or ["*"],
     allow_methods=["GET", "POST", "OPTIONS", "DELETE"],
     allow_headers=["*"],

@@ -40,13 +40,15 @@ from .compliance_export import register as register_compliance_export
 from .audit_export import register as register_audit_export
 from .agent_sla import register as register_agent_sla
 
-# v3.14.0 — consolidated utility tools (live brain API)
-from .utilities_live import register as register_utilities_live
-
-# v2.0.0 orphan tools — injection and pii_intl remain separate (rewritten for live API)
+# v2.0.0 orphan tools — discovered via GAP analysis v3.13.0 (2026-04-26)
+from .cache import register as register_cache
+from .compare_models import register as register_compare_models
 from .injection import register as register_injection
+from .optimize_prompt import register as register_optimize_prompt
 from .pii_intl import register as register_pii_intl
-
+from .rotate_key import register as register_rotate_key
+from .secrets import register as register_secrets
+from .tokens import register as register_tokens
 # P0.D Phase 1.2 — MCP A2A self-service billing tools (2026-05-02)
 from .billing_signup import register as register_billing_signup
 from .billing_subscribe import register as register_billing_subscribe
@@ -117,13 +119,16 @@ def register_all(mcp) -> None:
     # SIEM Audit Export — CEF, LEEF, syslog, JSON, CSV (2026-04-25)
     register_audit_export(mcp)
 
-    # v3.14.0 — consolidated utility tools: compare_models, count_tokens,
-    # optimize_prompt, rotate_key, manage_secrets, cache_status (live brain API)
-    register_utilities_live(mcp)
-
-    # Injection detection + International PII detection (live brain API)
+    # v2.0.0 orphan tools — registered in v3.13.0 after GAP analysis (2026-04-26)
+    register_cache(mcp)
+    register_compare_models(mcp)
     register_injection(mcp)
+    register_optimize_prompt(mcp)
     register_pii_intl(mcp)
+    register_rotate_key(mcp)
+    register_secrets(mcp)
+    register_tokens(mcp)
+
 
     # P0.D Phase 1.2 — MCP A2A self-service billing tools (2026-05-02)
     register_billing_signup(mcp)
