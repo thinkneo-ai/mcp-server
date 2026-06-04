@@ -24,6 +24,7 @@ from .auth import get_bearer_token, is_authenticated
 from .database import _get_conn, get_monthly_usage, hash_key, log_tool_call
 from .redis_client import check_ip_rate
 from .security import get_client_ip
+from .tool_logger import _estimate_region
 
 logger = logging.getLogger(__name__)
 
@@ -158,6 +159,8 @@ def check_free_tier(tool_name: str) -> Optional[str]:
             log_tool_call(
                 key_hash="anonymous",
                 tool_name=tool_name,
+                ip=get_client_ip() or "unknown",
+                region=_estimate_region(get_client_ip() or "unknown"),
                 cost_estimate=TOOL_COST_ESTIMATES.get(tool_name, 0.001),
             )
             return None  # Allowed
@@ -169,7 +172,9 @@ def check_free_tier(tool_name: str) -> Optional[str]:
         log_tool_call(
             key_hash=key_h,
             tool_name=tool_name,
-            cost_estimate=TOOL_COST_ESTIMATES.get(tool_name, 0.001),
+            ip=get_client_ip() or "unknown",
+                region=_estimate_region(get_client_ip() or "unknown"),
+                cost_estimate=TOOL_COST_ESTIMATES.get(tool_name, 0.001),
         )
         _touch_last_used(key_h)
         return None  # Allowed — trusted key
@@ -201,6 +206,8 @@ def check_free_tier(tool_name: str) -> Optional[str]:
             log_tool_call(
                 key_hash="anonymous",
                 tool_name=tool_name,
+                ip=get_client_ip() or "unknown",
+                region=_estimate_region(get_client_ip() or "unknown"),
                 cost_estimate=TOOL_COST_ESTIMATES.get(tool_name, 0.001),
             )
             return None  # Allowed as anonymous
@@ -214,7 +221,7 @@ def check_free_tier(tool_name: str) -> Optional[str]:
     # Enterprise tier — unlimited
     if tier == "enterprise":
         cost = TOOL_COST_ESTIMATES.get(tool_name, 0.001)
-        log_tool_call(key_hash=key_h, tool_name=tool_name, cost_estimate=cost)
+        log_tool_call(key_hash=key_h, tool_name=tool_name, ip=get_client_ip() or "unknown", region=_estimate_region(get_client_ip() or "unknown"), cost_estimate=cost)
         _touch_last_used(key_h)
         return None
 
@@ -238,7 +245,7 @@ def check_free_tier(tool_name: str) -> Optional[str]:
 
     # Within limits — log and allow
     cost = TOOL_COST_ESTIMATES.get(tool_name, 0.001)
-    log_tool_call(key_hash=key_h, tool_name=tool_name, cost_estimate=cost)
+    log_tool_call(key_hash=key_h, tool_name=tool_name, ip=get_client_ip() or "unknown", region=_estimate_region(get_client_ip() or "unknown"), cost_estimate=cost)
     _touch_last_used(key_h)
 
     return None  # Allowed

@@ -32,10 +32,14 @@ GUARDRAIL_RULES = [
         "patterns": [
             r"ignore\b.{0,20}\b(previous|prior|above|all)\b.{0,20}\binstructions",
             r"disregard\b.{0,30}\b(system|previous|instructions)",
-            r"act as (an?|the) (unrestricted|jailbreak|DAN)",
+            r"(act as|you are now|pretend to be)\b.{0,20}\b(unrestricted|jailbreak|DAN|evil)",
             r"new instructions:",
-            r"forget (everything|what you were told)",
-            r"reveal\b.{0,20}\bsystem prompt",
+            r"forget\b.{0,20}\b(everything|all|what you were told|your rules)",
+            r"reveal\b.{0,20}\b(system prompt|instructions|hidden)",
+            r"(bypass|circumvent|disable)\b.{0,20}\b(safety|filter|restriction|guardrail)",
+            r"\bsudo\b.{0,15}\b(mode|access|override)",
+            r"(developer|debug|admin)\s+mode",
+            r"(do not|don.?t)\s+(follow|obey|respect)\b.{0,20}\b(rules|guidelines|policy)",
         ],
     },
     {

@@ -33,6 +33,7 @@ import json
 import logging
 import os
 import secrets
+import re
 import time
 from datetime import datetime, timedelta, timezone
 from typing import Any, Optional
@@ -92,6 +93,18 @@ def _now() -> datetime:
 
 def _rand_token(nbytes: int = 32) -> str:
     return secrets.token_urlsafe(nbytes)
+
+
+_SAFE_CLIENT_NAME_RE = re.compile(r'[^a-zA-Z0-9 _\-.:/@()+]')
+
+
+def _sanitize_client_name(raw: str) -> str:
+    """Strip HTML/script injection from OAuth client_name.
+    Allow only safe chars: alphanumeric, spaces, basic punctuation."""
+    s = str(raw or '').strip()[:200]
+    s = re.sub(r'<[^>]*>', '', s)          # strip HTML tags
+    s = _SAFE_CLIENT_NAME_RE.sub('', s)    # remove dangerous chars
+    return s.strip()[:200] or 'unnamed-client'
 
 
 # ---------------------------------------------------------------------------
@@ -173,7 +186,7 @@ def _register_client(meta: dict) -> dict:
     grant_types = meta.get("grant_types") or ["authorization_code", "refresh_token"]
     response_types = meta.get("response_types") or ["code"]
     scope = meta.get("scope") or DEFAULT_SCOPE
-    client_name = (meta.get("client_name") or "")[:200]
+    client_name = _sanitize_client_name(meta.get("client_name", ""))
     software_id = (meta.get("software_id") or "")[:200]
     software_version = (meta.get("software_version") or "")[:50]
 
@@ -778,6 +791,18 @@ class OAuthMiddleware:
                 status_code=400,
             )(scope, receive, send)
             return
+
+        # Log registrant IP
+        client_ip = 'unknown'
+        if scope.get('client'):
+            client_ip = scope['client'][0]
+        headers_dict = {k.lower(): v for k, v in scope.get('headers', [])}
+        client_ip = (
+            headers_dict.get(b'x-real-ip', b'').decode('utf-8', errors='ignore')
+            or headers_dict.get(b'x-forwarded-for', b'').decode('utf-8', errors='ignore').split(',')[0].strip()
+            or client_ip
+        )
+        logger.info('OAUTH_REGISTER | ip=%s | client_name=%s', client_ip, meta.get('client_name', '')[:100])
 
         try:
             resp = _register_client(meta)

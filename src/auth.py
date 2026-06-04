@@ -13,6 +13,7 @@ from typing import Optional
 from starlette.types import ASGIApp, Receive, Scope, Send
 
 from .config import get_settings
+from .security import set_client_ip as _set_ip
 
 # Per-request Bearer token storage
 _bearer_token: ContextVar[Optional[str]] = ContextVar("bearer_token", default=None)
@@ -68,6 +69,13 @@ class BearerTokenMiddleware:
             token: Optional[str] = None
             if raw_auth.lower().startswith("bearer "):
                 token = raw_auth[7:].strip() or None
+            # Extract client IP from headers or ASGI scope
+            _raw_ip = (
+                headers.get(b"x-real-ip", b"").decode("utf-8", errors="ignore")
+                or headers.get(b"x-forwarded-for", b"").decode("utf-8", errors="ignore").split(",")[0].strip()
+                or (scope.get("client") or ("unknown",))[0]
+            ) or "unknown"
+            _set_ip(_raw_ip)
             ctx_token = _bearer_token.set(token)
             try:
                 await self.app(scope, receive, send)

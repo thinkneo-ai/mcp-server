@@ -20,6 +20,8 @@ from mcp.types import LoggingLevel
 
 from .auth import get_bearer_token
 from .database import hash_key, log_tool_call
+from .security import get_client_ip
+from .tool_logger import _estimate_region
 
 logger = logging.getLogger(__name__)
 
@@ -74,5 +76,7 @@ def register_logging(mcp: FastMCP) -> None:
         log_tool_call(
             key_hash=key_hash,
             tool_name="logging/setLevel",
+            ip=get_client_ip() or "unknown",
+            region=_estimate_region(get_client_ip() or "unknown"),
             cost_estimate=0.0,
         )
