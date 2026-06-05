@@ -1,0 +1,31 @@
+# Gitleaks configuration for thinkneo-ai/mcp-server
+# Extends the default ruleset and allowlists known test fixtures and
+# documentation placeholders. These are NOT real credentials — they are
+# example/fake values used to exercise the log-redaction and secret-scanning
+# logic, or shown in docs as illustrative placeholders.
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Test fixtures and documentation placeholders (non-secret examples)"
+
+# Paths that only contain example/fake secrets for tests and docs.
+paths = [
+  '''tests/unit/test_log_redaction\.py''',
+  '''tests/unit/tools/test_safety\.py''',
+  '''tests/thinkshield/test_engine\.py''',
+  '''docs/quickstart\.md''',
+  '''docs/self-hosted/quickstart\.md''',
+]
+
+# Specific placeholder/example values, allowlisted by content so they remain
+# safe even if moved to other files.
+regexes = [
+  '''sk-proj-abc123xyz456def789''',
+  '''ghp_aBcDeFgHiJkLmNoPqRsTuVwXyZ0123456789''',
+  '''AKIAIOSFODNN7EXAMPLE''',
+  '''wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY''',
+  '''re_FAKE_TEST_KEY_NOT_REAL_00000000000''',
+  '''tn_live_abc123''',
+  '''your-secret-api-key-here''',
+]
