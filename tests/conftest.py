@@ -10,6 +10,8 @@ Provides:
 
 from __future__ import annotations
 
+import asyncio
+import inspect
 import json
 import sys
 from pathlib import Path
@@ -193,17 +195,35 @@ def all_tools():
 
 
 def tool_fn(all_tools, name: str):
-    """Extract a tool function by name."""
+    """Extract a tool function by name.
+
+    Tools may be async; wrap coroutine functions so callers can invoke them
+    synchronously and receive the JSON string result directly.
+    """
     assert name in all_tools, f"Tool {name} not found. Available: {sorted(all_tools.keys())}"
-    return all_tools[name].fn
+    fn = all_tools[name].fn
+
+    def _sync(*args, **kwargs):
+        result = fn(*args, **kwargs)
+        if inspect.iscoroutine(result):
+            return asyncio.run(result)
+        return result
+
+    return _sync
 
 
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
 
-def parse_tool_result(result: str) -> dict:
-    """Parse a tool's JSON string result into a dict."""
+def parse_tool_result(result) -> dict:
+    """Parse a tool's JSON string result into a dict.
+
+    Tools may be sync (returning a JSON string) or async (returning a
+    coroutine). Resolve coroutines so callers can stay synchronous.
+    """
+    if inspect.iscoroutine(result):
+        result = asyncio.run(result)
     parsed = json.loads(result)
     assert isinstance(parsed, dict), f"Expected dict, got {type(parsed)}"
     return parsed
