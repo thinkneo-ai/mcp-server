@@ -23,7 +23,7 @@ MODELS = [
 ]
 
 # Opus tested separately (expensive)
-OPUS_MODEL = "claude-opus-4"
+OPUS_MODEL = "claude-opus-4-20250414"
 
 
 @pytest.fixture
