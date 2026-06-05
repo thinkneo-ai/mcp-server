@@ -19,3 +19,6 @@ audit_*.log
 *.swp
 .env.bak
 .env.old
+.env.backup
+.env.backup-*
+.env.*.backup
