@@ -28,4 +28,9 @@ regexes = [
   '''re_FAKE_TEST_KEY_NOT_REAL_00000000000''',
   '''tn_live_abc123''',
   '''your-secret-api-key-here''',
+  # REVOKED credential (NOT a fake example). The old THINKNEO_API_KEY below was
+  # leaked via historical functional tests, then ROTATED on production
+  # (2026-06-07) — it no longer authenticates anything. Allowlisted so history
+  # scans stay green without rewriting 16 published tags. Do NOT add live keys.
+  '''374ed89eb7a288e274371019780a56d7d7f57022f48aa76773d97c130a49e7fe''',
 ]
