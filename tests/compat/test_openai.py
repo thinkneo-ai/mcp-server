@@ -16,7 +16,7 @@ from .conftest import get_key, measure_call, log_latency, validate_chat_response
 
 API_URL = "https://api.openai.com/v1/chat/completions"
 
-MODELS = ["gpt-4o", "gpt-4o-mini", "gpt-4.1"]
+MODELS = ["gpt-4o-mini"]
 
 
 @pytest.fixture

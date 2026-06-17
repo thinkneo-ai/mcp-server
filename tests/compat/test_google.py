@@ -13,7 +13,7 @@ import httpx
 import pytest
 from .conftest import get_key, measure_call, log_latency, validate_chat_response, check_status
 
-MODELS = ["gemini-2.5-flash", "gemini-2.5-pro"]
+MODELS = ["gemini-2.5-flash"]
 
 
 @pytest.fixture

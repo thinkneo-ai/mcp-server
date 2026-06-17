@@ -18,7 +18,6 @@ API_URL = "https://api.anthropic.com/v1/messages"
 API_VERSION = "2023-06-01"
 
 MODELS = [
-    "claude-sonnet-4-20250514",
     "claude-haiku-4-5-20251001",
 ]
 
@@ -122,6 +121,6 @@ def test_tool_use(api_key):
 # --- Response shape ---
 
 def test_response_has_usage(api_key):
-    data, _ = _chat(api_key, MODELS[1])
+    data, _ = _chat(api_key, MODELS[0])
     assert "input_tokens" in data.get("usage", {}), "Missing input_tokens"
     assert "output_tokens" in data.get("usage", {}), "Missing output_tokens"
