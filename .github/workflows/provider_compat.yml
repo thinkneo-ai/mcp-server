@@ -16,7 +16,7 @@ jobs:
           python-version: "3.12"
       - run: pip install httpx pytest pytest-timeout "psycopg[binary]" psycopg_pool
       - name: Run Anthropic compat tests
-        run: pytest tests/compat/test_anthropic.py -v --timeout=60 -s
+        run: pytest tests/compat/test_anthropic.py -q --tb=no -ra --timeout=60
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY_COMPAT }}
 
@@ -30,7 +30,7 @@ jobs:
           python-version: "3.12"
       - run: pip install httpx pytest pytest-timeout "psycopg[binary]" psycopg_pool
       - name: Run OpenAI compat tests
-        run: pytest tests/compat/test_openai.py -v --timeout=60 -s
+        run: pytest tests/compat/test_openai.py -q --tb=no -ra --timeout=60
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY_COMPAT }}
 
@@ -44,7 +44,7 @@ jobs:
           python-version: "3.12"
       - run: pip install httpx pytest pytest-timeout "psycopg[binary]" psycopg_pool
       - name: Run Google compat tests
-        run: pytest tests/compat/test_google.py -v --timeout=60 -s
+        run: pytest tests/compat/test_google.py -q --tb=no -ra --timeout=60
         env:
           GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY_COMPAT }}
 
@@ -58,7 +58,7 @@ jobs:
           python-version: "3.12"
       - run: pip install httpx pytest pytest-timeout "psycopg[binary]" psycopg_pool
       - name: Run NVIDIA compat tests
-        run: pytest tests/compat/test_nvidia.py -v --timeout=60 -s
+        run: pytest tests/compat/test_nvidia.py -q --tb=no -ra --timeout=60
         env:
           NVIDIA_API_KEY: ${{ secrets.NVIDIA_API_KEY_COMPAT }}
 
@@ -67,26 +67,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: [anthropic, openai, google, nvidia]
     if: failure()
-    permissions:
-      issues: write
     steps:
-      - uses: actions/checkout@v4
-      - name: Create failure issue
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Report failure (no public broadcast)
         run: |
-          gh issue create \
-            --repo thinkneo-ai/mcp-server \
-            --title "🔴 Provider compat failure — $(date -u +%Y-%m-%d)" \
-            --body "One or more provider compatibility tests failed on $(date -u '+%Y-%m-%d %H:%M UTC').
-
-          **Workflow run:** ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-
-          Check which provider failed and investigate:
-          - Model deprecated?
-          - API format changed?
-          - Rate limit hit?
-          - Temporary outage?
-
-          Close this issue after confirming resolution." \
-            --label "provider-compat-failure"
+          echo "::error::Provider compat check failed — one or more providers returned a non-200 status (see job results above)."
+          echo "Internal status is intentionally NOT broadcast to a public issue."
+          echo "Failure is surfaced via the Actions run status and GitHub's built-in scheduled-workflow failure email to the workflow owner."

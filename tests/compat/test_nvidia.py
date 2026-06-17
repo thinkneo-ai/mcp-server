@@ -13,7 +13,7 @@ Note: nvidia/llama-3.1-nemotron-70b-instruct deprecated (404 as of 2026-04-25).
 import json
 import httpx
 import pytest
-from .conftest import get_key, measure_call, log_latency, validate_chat_response
+from .conftest import get_key, measure_call, log_latency, validate_chat_response, check_status
 
 API_URL = "https://integrate.api.nvidia.com/v1/chat/completions"
 
@@ -38,7 +38,7 @@ def _chat(api_key: str, model: str, text: str = "Say 'OK' and nothing else.") ->
             "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json",
         }, timeout=30)
-        resp.raise_for_status()
+        check_status(resp, "nvidia")
         return resp.json()
     return measure_call(call)
 

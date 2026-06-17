@@ -11,7 +11,7 @@ Source: https://ai.google.dev/gemini-api/docs/models
 import json
 import httpx
 import pytest
-from .conftest import get_key, measure_call, log_latency, validate_chat_response
+from .conftest import get_key, measure_call, log_latency, validate_chat_response, check_status
 
 MODELS = ["gemini-2.5-flash", "gemini-2.5-pro"]
 
@@ -28,7 +28,7 @@ def _chat(api_key: str, model: str, text: str = "Say 'OK' and nothing else.") ->
             "contents": [{"parts": [{"text": text}]}],
             "generationConfig": {"maxOutputTokens": 50},
         }, headers={"Content-Type": "application/json"}, timeout=30)
-        resp.raise_for_status()
+        check_status(resp, "google")
         return resp.json()
     return measure_call(call)
 
@@ -49,7 +49,7 @@ def test_streaming(api_key):
         "contents": [{"parts": [{"text": "Say hello."}]}],
         "generationConfig": {"maxOutputTokens": 50},
     }, headers={"Content-Type": "application/json"}, timeout=30) as resp:
-        resp.raise_for_status()
+        check_status(resp, "google")
         for line in resp.iter_lines():
             if line.startswith("data: "):
                 chunks += 1

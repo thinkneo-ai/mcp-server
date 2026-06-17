@@ -18,6 +18,13 @@ def get_key(env_var: str) -> str:
     return key
 
 
+def check_status(resp, provider: str):
+    """Fail with only provider + HTTP status. Never surface response bodies,
+    request ids, or tracebacks — the Actions log of this repo is public."""
+    if resp.status_code != 200:
+        pytest.fail(f"{provider} HTTP {resp.status_code}", pytrace=False)
+
+
 def measure_call(fn, *args, **kwargs):
     """Call fn and return (result, latency_ms)."""
     start = time.perf_counter()

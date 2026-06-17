@@ -12,7 +12,7 @@ Source: https://platform.claude.com/docs/en/about-claude/models/overview
 import json
 import httpx
 import pytest
-from .conftest import get_key, measure_call, log_latency, validate_chat_response
+from .conftest import get_key, measure_call, log_latency, validate_chat_response, check_status
 
 API_URL = "https://api.anthropic.com/v1/messages"
 API_VERSION = "2023-06-01"
@@ -43,7 +43,7 @@ def _chat(api_key: str, model: str, text: str = "Say 'OK' and nothing else.") ->
             "anthropic-version": API_VERSION,
             "content-type": "application/json",
         }, timeout=30)
-        resp.raise_for_status()
+        check_status(resp, "anthropic")
         return resp.json()
     return measure_call(call)
 
@@ -84,7 +84,7 @@ def test_streaming(api_key, model):
         "anthropic-version": API_VERSION,
         "content-type": "application/json",
     }, timeout=30) as resp:
-        resp.raise_for_status()
+        check_status(resp, "anthropic")
         for line in resp.iter_lines():
             if line.startswith("data: "):
                 chunks += 1
@@ -96,20 +96,24 @@ def test_streaming(api_key, model):
 # --- Tool use ---
 
 def test_tool_use(api_key):
-    data, latency = measure_call(lambda: httpx.post(API_URL, json={
-        "model": MODELS[0],
-        "max_tokens": 200,
-        "tools": [{
-            "name": "get_weather",
-            "description": "Get weather for a city",
-            "input_schema": {"type": "object", "properties": {"city": {"type": "string"}}, "required": ["city"]},
-        }],
-        "messages": [{"role": "user", "content": "What's the weather in Tokyo?"}],
-    }, headers={
-        "x-api-key": api_key,
-        "anthropic-version": API_VERSION,
-        "content-type": "application/json",
-    }, timeout=30).json())
+    def call():
+        resp = httpx.post(API_URL, json={
+            "model": MODELS[0],
+            "max_tokens": 200,
+            "tools": [{
+                "name": "get_weather",
+                "description": "Get weather for a city",
+                "input_schema": {"type": "object", "properties": {"city": {"type": "string"}}, "required": ["city"]},
+            }],
+            "messages": [{"role": "user", "content": "What's the weather in Tokyo?"}],
+        }, headers={
+            "x-api-key": api_key,
+            "anthropic-version": API_VERSION,
+            "content-type": "application/json",
+        }, timeout=30)
+        check_status(resp, "anthropic")
+        return resp.json()
+    data, latency = measure_call(call)
     # Model should either use the tool or respond with text
     assert "content" in data
     log_latency(MODELS[0], "tool_use", latency)

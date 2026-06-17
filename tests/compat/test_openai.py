@@ -12,7 +12,7 @@ Source: https://developers.openai.com/api/docs/models
 import json
 import httpx
 import pytest
-from .conftest import get_key, measure_call, log_latency, validate_chat_response
+from .conftest import get_key, measure_call, log_latency, validate_chat_response, check_status
 
 API_URL = "https://api.openai.com/v1/chat/completions"
 
@@ -37,7 +37,7 @@ def _chat(api_key: str, model: str, text: str = "Say 'OK' and nothing else.") ->
             "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json",
         }, timeout=30)
-        resp.raise_for_status()
+        check_status(resp, "openai")
         return resp.json()
     return measure_call(call)
 
@@ -61,7 +61,7 @@ def test_streaming(api_key):
         "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json",
     }, timeout=30) as resp:
-        resp.raise_for_status()
+        check_status(resp, "openai")
         for line in resp.iter_lines():
             if line.startswith("data: ") and line != "data: [DONE]":
                 chunks += 1
@@ -71,22 +71,26 @@ def test_streaming(api_key):
 
 
 def test_tool_use(api_key):
-    data, latency = measure_call(lambda: httpx.post(API_URL, json={
-        "model": "gpt-4o-mini",
-        "max_tokens": 200,
-        "tools": [{
-            "type": "function",
-            "function": {
-                "name": "get_weather",
-                "description": "Get weather",
-                "parameters": {"type": "object", "properties": {"city": {"type": "string"}}, "required": ["city"]},
-            },
-        }],
-        "messages": [{"role": "user", "content": "Weather in Tokyo?"}],
-    }, headers={
-        "Authorization": f"Bearer {api_key}",
-        "Content-Type": "application/json",
-    }, timeout=30).json())
+    def call():
+        resp = httpx.post(API_URL, json={
+            "model": "gpt-4o-mini",
+            "max_tokens": 200,
+            "tools": [{
+                "type": "function",
+                "function": {
+                    "name": "get_weather",
+                    "description": "Get weather",
+                    "parameters": {"type": "object", "properties": {"city": {"type": "string"}}, "required": ["city"]},
+                },
+            }],
+            "messages": [{"role": "user", "content": "Weather in Tokyo?"}],
+        }, headers={
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+        }, timeout=30)
+        check_status(resp, "openai")
+        return resp.json()
+    data, latency = measure_call(call)
     assert "choices" in data
     log_latency("gpt-4o-mini", "tool_use", latency)
 
