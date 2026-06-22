@@ -35,7 +35,7 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY_COMPAT }}
 
   google:
-    name: Google (Gemini 2.5 Flash, Pro)
+    name: Google (Gemini 2.5 Pro/Flash/Flash-Lite, 2.0 Flash/Flash-Lite, embedding-001)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

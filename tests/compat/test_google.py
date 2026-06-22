@@ -12,10 +12,23 @@ import httpx
 import pytest
 from .conftest import get_key, measure_call, log_latency, validate_chat_response, check_status
 
-# Gemini model ID — atualizar se o Google depreciar este modelo; revisado 2026-06-17.
-# Apenas GA stable (sem aliases -latest). Pro foi removido: 429 no free-tier do CI.
+# Gemini model ID usado nos testes single-model (streaming/usage) — GA stable, sem -latest.
 GEMINI_MODEL = "gemini-2.5-flash"
-MODELS = [GEMINI_MODEL]
+
+# Todos os modelos generativos Google do catálogo de preços
+# (auth.provider_model_pricing_catalog). Parametrizado para que um modelo
+# depreciado/renomeado apareça como 404 no CI em vez de divergir silenciosamente
+# do catálogo. Um 429 (cota do free-tier) NÃO é falha de compat → skip.
+# gemini-embedding-001 é coberto à parte (endpoint embedContent), pois não é um
+# modelo de generateContent/streaming. Revisado 2026-06-22.
+CHAT_MODELS = [
+    "gemini-2.5-pro",
+    "gemini-2.5-flash",
+    "gemini-2.5-flash-lite",
+    "gemini-2.0-flash",
+    "gemini-2.0-flash-lite",
+]
+EMBEDDING_MODEL = "gemini-embedding-001"
 
 
 @pytest.fixture
@@ -35,11 +48,42 @@ def _chat(api_key: str, model: str, text: str = "Say 'OK' and nothing else.") ->
     return measure_call(call)
 
 
-@pytest.mark.parametrize("model", MODELS)
+def _chat_raw(api_key: str, model: str, text: str = "Say 'OK' and nothing else."):
+    """Like _chat but returns the raw response so the caller can tolerate a 429
+    throttle (skip) while still failing on a 404 decommission via check_status."""
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
+    def call():
+        return httpx.post(url, json={
+            "contents": [{"parts": [{"text": text}]}],
+            "generationConfig": {"maxOutputTokens": 50},
+        }, headers={"Content-Type": "application/json"}, timeout=30)
+    return measure_call(call)
+
+
+@pytest.mark.parametrize("model", CHAT_MODELS)
 def test_chat_completion(api_key, model):
-    data, latency = _chat(api_key, model)
-    validate_chat_response(data, "google")
+    resp, latency = _chat_raw(api_key, model)
+    if resp.status_code == 429:
+        pytest.skip(f"Google free-tier quota (429) for {model} — not a compat failure")
+    check_status(resp, "google")
+    validate_chat_response(resp.json(), "google")
     log_latency(model, "chat", latency)
+
+
+def test_embedding_model_exists(api_key):
+    """Catch a decommissioned/renamed embedding model: embedContent must not 404."""
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{EMBEDDING_MODEL}:embedContent?key={api_key}"
+    def call():
+        return httpx.post(url, json={
+            "model": f"models/{EMBEDDING_MODEL}",
+            "content": {"parts": [{"text": "ping"}]},
+        }, headers={"Content-Type": "application/json"}, timeout=30)
+    resp, latency = measure_call(call)
+    if resp.status_code == 429:
+        pytest.skip(f"Google free-tier quota (429) for {EMBEDDING_MODEL} — not a compat failure")
+    check_status(resp, "google")
+    assert "embedding" in resp.json(), "Missing 'embedding' in Google embedContent response"
+    log_latency(EMBEDDING_MODEL, "embedding", latency)
 
 
 def _stream_once(api_key: str, model: str) -> tuple[int, int]:
