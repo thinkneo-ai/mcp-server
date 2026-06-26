@@ -18,7 +18,8 @@ GEMINI_MODEL = "gemini-2.5-flash"
 # Todos os modelos generativos Google do catálogo de preços
 # (auth.provider_model_pricing_catalog). Parametrizado para que um modelo
 # depreciado/renomeado apareça como 404 no CI em vez de divergir silenciosamente
-# do catálogo. Um 429 (cota do free-tier) NÃO é falha de compat → skip.
+# do catálogo. Um 429 (cota do free-tier) ou 503 (overloaded) NÃO é falha de compat
+# → retry once, then skip.
 # gemini-embedding-001 é coberto à parte (endpoint embedContent), pois não é um
 # modelo de generateContent/streaming. Revisado 2026-06-22.
 CHAT_MODELS = [
@@ -36,21 +37,25 @@ def api_key():
     return get_key("GOOGLE_API_KEY")
 
 
-def _chat(api_key: str, model: str, text: str = "Say 'OK' and nothing else.") -> tuple[dict, float]:
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
-    def call():
-        resp = httpx.post(url, json={
-            "contents": [{"parts": [{"text": text}]}],
-            "generationConfig": {"maxOutputTokens": 50},
-        }, headers={"Content-Type": "application/json"}, timeout=30)
-        check_status(resp, "google")
-        return resp.json()
-    return measure_call(call)
+# Provider-side transient statuses: 429 = free-tier quota, 503 = model overloaded /
+# UNAVAILABLE. Neither is a compatibility break, so they are retried once then skipped
+# — a momentary overload must not flap CI, while a 404 decommission still hard-fails.
+TRANSIENT_STATUSES = (429, 503)
+
+
+def _retry_transient(call_fn):
+    """call_fn() -> (resp, latency). Retry ONCE (after a short pause) when the first
+    response is a transient provider status, so the caller skips only if it persists."""
+    resp, latency = call_fn()
+    if resp.status_code in TRANSIENT_STATUSES:
+        time.sleep(2)
+        resp, latency = call_fn()
+    return resp, latency
 
 
 def _chat_raw(api_key: str, model: str, text: str = "Say 'OK' and nothing else."):
-    """Like _chat but returns the raw response so the caller can tolerate a 429
-    throttle (skip) while still failing on a 404 decommission via check_status."""
+    """Return the raw response so the caller can tolerate a transient throttle
+    (429/503 skip) while still failing on a 404 decommission via check_status."""
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
     def call():
         return httpx.post(url, json={
@@ -62,9 +67,9 @@ def _chat_raw(api_key: str, model: str, text: str = "Say 'OK' and nothing else."
 
 @pytest.mark.parametrize("model", CHAT_MODELS)
 def test_chat_completion(api_key, model):
-    resp, latency = _chat_raw(api_key, model)
-    if resp.status_code == 429:
-        pytest.skip(f"Google free-tier quota (429) for {model} — not a compat failure")
+    resp, latency = _retry_transient(lambda: _chat_raw(api_key, model))
+    if resp.status_code in TRANSIENT_STATUSES:
+        pytest.skip(f"Google transient ({resp.status_code}) for {model} — not a compat failure")
     check_status(resp, "google")
     validate_chat_response(resp.json(), "google")
     log_latency(model, "chat", latency)
@@ -78,9 +83,9 @@ def test_embedding_model_exists(api_key):
             "model": f"models/{EMBEDDING_MODEL}",
             "content": {"parts": [{"text": "ping"}]},
         }, headers={"Content-Type": "application/json"}, timeout=30)
-    resp, latency = measure_call(call)
-    if resp.status_code == 429:
-        pytest.skip(f"Google free-tier quota (429) for {EMBEDDING_MODEL} — not a compat failure")
+    resp, latency = _retry_transient(lambda: measure_call(call))
+    if resp.status_code in TRANSIENT_STATUSES:
+        pytest.skip(f"Google transient ({resp.status_code}) for {EMBEDDING_MODEL} — not a compat failure")
     check_status(resp, "google")
     assert "embedding" in resp.json(), "Missing 'embedding' in Google embedContent response"
     log_latency(EMBEDDING_MODEL, "embedding", latency)
@@ -124,8 +129,8 @@ def test_streaming(api_key):
         assert chunks >= 1
         return
 
-    if status == 429:
-        pytest.skip("Google free-tier quota (429) after retry — skipped, not a compat failure")
+    if status in (429, 503):
+        pytest.skip(f"Google transient ({status}) after retry — skipped, not a compat failure")
     if status == 200 and chunks == 0:
         pytest.skip("Google free-tier soft-throttle (200, empty stream) after retry — skipped, not a parser failure")
 
@@ -134,7 +139,11 @@ def test_streaming(api_key):
 
 
 def test_response_has_usage(api_key):
-    data, _ = _chat(api_key, GEMINI_MODEL)
+    resp, _ = _retry_transient(lambda: _chat_raw(api_key, GEMINI_MODEL))
+    if resp.status_code in TRANSIENT_STATUSES:
+        pytest.skip(f"Google transient ({resp.status_code}) for {GEMINI_MODEL} — not a compat failure")
+    check_status(resp, "google")
+    data = resp.json()
     assert "candidates" in data
     # Gemini returns usageMetadata
     assert "usageMetadata" in data or "candidates" in data
