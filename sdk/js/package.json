@@ -1,5 +1,5 @@
 {
-  "name": "@thinkneo/sdk",
+  "name": "@thinkneo_ai/sdk",
   "version": "0.1.0",
   "description": "TypeScript/JavaScript SDK for the ThinkNEO MCP Server — Enterprise AI Control Plane",
   "main": "dist/index.js",

@@ -3,7 +3,7 @@
  *
  * @example
  * ```ts
- * import { ThinkNEO } from "@thinkneo/sdk";
+ * import { ThinkNEO } from "@thinkneo_ai/sdk";
  *
  * const tn = new ThinkNEO({ apiKey: "tnk_..." });
  *
